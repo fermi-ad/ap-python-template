@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling>=1.25.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "__template_project_name__"
+version = "0.1.0"
+description = "__template_description__"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  { name = "__template_author__" }
+]
+dependencies = []
+
+[project.scripts]
+__template-module__ = "__template_module__.main:main"
+
+[project.optional-dependencies]
+gui-pyqt = [
+  "PyQt6>=6.7"
+]
+
+tool = {}
+
+[tool.uv]
+dev-dependencies = [
+  "pytest>=8.0",
+  "ruff>=0.6"
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
