@@ -2,7 +2,7 @@
 
 __template_description__
 
-A Python-first project template for non-expert developers. The default path is a CLI app with optional, isolated PyQt scaffold support.
+A Python-first project template. The default path is a CLI app with optional, isolated PyQt scaffold support.
 
 ## Quickstart
 
