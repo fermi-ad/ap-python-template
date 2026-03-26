@@ -1,8 +1,8 @@
-IMAGE_NAME ?= __template_project_name__
+IMAGE_NAME ?= ap-python-starter-kit
 IMAGE_NAME_GUI ?= $(IMAGE_NAME)-gui
 IMAGE_NAME_XPRA ?= $(IMAGE_NAME)-xpra
 
-CONTAINER_NAME ?= __template_project_name__
+CONTAINER_NAME ?= ap-python-starter-kit
 
 XPRA_PORT ?= 14500
 XPRA_BIND_HOST ?= 0.0.0.0

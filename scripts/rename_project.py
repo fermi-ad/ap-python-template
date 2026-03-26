@@ -59,6 +59,7 @@ DEFAULT_TARGET_FILES = [
     "pyproject.toml",
     "Dockerfile",
     "docker/start.sh",
+    "Makefile",
     "README.md",
     "docs/che.md",
     "docs/container.md",
