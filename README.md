@@ -6,15 +6,18 @@ A Python-first project template. The default path is a CLI app with optional, is
 
 ## Quickstart
 
-1. Replace placeholders:
-   - `__template_project_name__`
-   - `__template_module__`
-   - `__template_description__`
-   - `__template_author__`
+1. Rename the template to your project:
+
+   ```bash
+   python3 scripts/rename_project.py
+   ```
+
+   (Non-interactive usage is also supported, see [`scripts/rename_project.py`](scripts/rename_project.py).)
+
 2. Install dependencies:
    - `uv sync`
 3. Run the CLI app:
-   - `uv run __template-module__`
+   - `uv run my-project` (or your chosen `--cli-name`)
 
 Detailed onboarding is in [`docs/quickstart.md`](docs/quickstart.md).
 

@@ -78,7 +78,15 @@ commands:
       group:
         kind: run
         isDefault: true
-
+ 
+  - id: rename-project
+    exec:
+      component: tools
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: python3 scripts/rename_project.py
+      group:
+        kind: run
+ 
   - id: docs-serve
     exec:
       component: tools
