@@ -4,7 +4,7 @@ FROM almalinux/9-base AS base
 
 USER root
 
-RUN dnf install -y krb5-libs shadow-utils python3.12 python3.12-devel git curl \
+RUN dnf install -y krb5-libs shadow-utils python3.12 python3.12-devel git \
  && dnf clean all
 
 # uv expects a few basics during sync/install
@@ -20,21 +20,24 @@ WORKDIR /install
 RUN dnf install -y gcc gcc-c++ make krb5-devel \
  && dnf clean all
 
+# Editable builds require project sources (and README referenced by pyproject).
 COPY pyproject.toml ./
+COPY uv.lock ./
+COPY README.md ./
+COPY src ./src
+COPY scaffolds ./scaffolds
+
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:${PATH}"
 
 # Build a venv in /usr/local for simple runtime PATH.
+# Install the package into the venv (non-editable) so runtime doesn't depend on source paths.
 RUN uv venv /usr/local/.venv \
- && /usr/local/.venv/bin/python -m pip install --no-cache-dir -e .
+ && uv pip install --python /usr/local/.venv/bin/python --no-cache-dir .
 
 FROM base AS runtime
 
 COPY --from=builder /usr/local /usr/local
-COPY src /app/src
-COPY scaffolds /app/scaffolds
-COPY docker/start.sh /usr/local/bin/start.sh
-RUN chmod +x /usr/local/bin/start.sh
 
 WORKDIR /app
 
@@ -43,7 +46,8 @@ USER pyuser:pygroup
 ENV PATH="/usr/local/.venv/bin:${PATH}"
 ENV APP_CMD="python -m ap_python_starter_kit.main"
 
-ENTRYPOINT ["/usr/local/bin/start.sh"]
+# Default (CLI) container just runs the app command.
+ENTRYPOINT ["/bin/bash","-lc","${APP_CMD}"]
 
 # Optional GUI runtime target for host X server usage.
 FROM runtime AS runtime-gui
@@ -63,7 +67,7 @@ RUN dnf install -y \
       fontconfig \
  && dnf clean all
 
-RUN /usr/local/.venv/bin/python -m pip install --no-cache-dir "PyQt6>=6.7"
+RUN uv pip install --python /usr/local/.venv/bin/python --no-cache-dir "PyQt6>=6.7"
 
 ENV APP_CMD="python /app/scaffolds/pyqt/app.py"
 
@@ -111,14 +115,21 @@ WORKDIR /install
 
 RUN dnf install -y gcc gcc-c++ make krb5-devel && dnf clean all
 
+# Editable builds require project sources (and README referenced by pyproject).
 COPY pyproject.toml ./
+COPY uv.lock ./
+COPY README.md ./
+COPY src ./src
+COPY scaffolds ./scaffolds
+
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:${PATH}"
 
 # Create venv in /usr/local to simplify runtime PATH.
+# Install the package into the venv (non-editable) so runtime doesn't depend on source paths.
 RUN uv venv /usr/local/.venv \
- && /usr/local/.venv/bin/python -m pip install --no-cache-dir -e . \
- && /usr/local/.venv/bin/python -m pip install --no-cache-dir "PyQt6>=6.7"
+ && uv pip install --python /usr/local/.venv/bin/python --no-cache-dir . \
+ && uv pip install --python /usr/local/.venv/bin/python --no-cache-dir "PyQt6>=6.7"
 
 FROM xpra-base AS xpra-runtime
 
@@ -133,7 +144,6 @@ WORKDIR /app
 USER pyuser:pygroup
 
 ENV PATH="/usr/local/.venv/bin:${PATH}"
-ENV XDG_RUNTIME_DIR=/tmp/runtime-pyuser
 
 # Xpra HTML on :14500 with no auth.
 ENV XPRA_HTML=on

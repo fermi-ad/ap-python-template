@@ -19,15 +19,22 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM EXIT
 
-mkdir -p /run/user/1000 /tmp/runtime-pyuser /run/xpra /tmp/.X11-unix
-chmod 700 /run/user/1000 /tmp/runtime-pyuser /run/xpra || true
+# Prefer writable runtime dirs when running as non-root (common in OpenShift/K8s).
+# /run is often read-only for unprivileged containers.
+RUNTIME_BASE="${RUNTIME_BASE:-/tmp}"
+XDG_RUNTIME_DIR_DEFAULT="${XDG_RUNTIME_DIR:-${RUNTIME_BASE}/runtime-pyuser}"
+XPRA_RUN_DIR_DEFAULT="${XPRA_RUN_DIR:-${RUNTIME_BASE}/xpra}"
+USER_RUN_DIR_DEFAULT="${USER_RUN_DIR:-${RUNTIME_BASE}/user-1000}"
+
+mkdir -p "${USER_RUN_DIR_DEFAULT}" "${XDG_RUNTIME_DIR_DEFAULT}" "${XPRA_RUN_DIR_DEFAULT}" /tmp/.X11-unix
+chmod 700 "${USER_RUN_DIR_DEFAULT}" "${XDG_RUNTIME_DIR_DEFAULT}" "${XPRA_RUN_DIR_DEFAULT}" || true
 if ! chmod 1777 /tmp/.X11-unix 2>/dev/null; then
   echo "[start.sh] warning: could not chmod /tmp/.X11-unix (continuing)" >&2
 fi
 
 touch "${APP_LOG_FILE}" "${XPRA_LOG_FILE}"
 
-export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/runtime-pyuser}"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR_DEFAULT}"
 
 echo "[start.sh] starting Xpra HTML on ${XPRA_BIND_HOST}:${XPRA_BIND_PORT} display ${XPRA_DISPLAY} (auth=${XPRA_AUTH})"
 
