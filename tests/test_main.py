@@ -2,20 +2,10 @@ from __future__ import annotations
 
 import sys
 
-from __template_module__.main import main
+from __template_module__.main import build_parser
 
 
-def test_main_default(capsys, monkeypatch):
-    monkeypatch.setattr(sys, "argv", ["__template-module__"])
-    code = main()
-    out = capsys.readouterr().out.strip()
-    assert code == 0
-    assert "Hello, world from __template_project_name__!" == out
-
-
-def test_main_custom_name(capsys, monkeypatch):
-    monkeypatch.setattr(sys, "argv", ["__template-module__", "--name", "Template"])
-    code = main()
-    out = capsys.readouterr().out.strip()
-    assert code == 0
-    assert "Hello, Template from __template_project_name__!" == out
+def test_build_parser_accepts_device_flag() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["--device", "G:SCTIME@P,15H"])
+    assert args.device == "G:SCTIME@P,15H"
