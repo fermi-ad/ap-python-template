@@ -18,6 +18,12 @@ A Python-first project template. The default path is a CLI app with optional, is
 
 Detailed onboarding is in [`docs/quickstart.md`](docs/quickstart.md).
 
+## Eclipse Che / Dev Spaces
+
+This repo includes an Eclipse Che devfile at [`.devfile.yaml`](.devfile.yaml:1).
+
+Docs: [`docs/che.md`](docs/che.md:1).
+
 ## Project Layout
 
 ```text
