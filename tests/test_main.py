@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 
-from __template_module__.main import build_parser
+from ap_python_starter_kit.main import build_parser
 
 
 def test_build_parser_accepts_device_flag() -> None:

@@ -3,13 +3,13 @@ requires = ["hatchling>=1.25.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "__template_project_name__"
+name = "ap-python-starter-kit"
 version = "0.1.0"
-description = "__template_description__"
+description = "Python starter kit"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
-  { name = "__template_author__" }
+  { name = "Template Maintainers" }
 ]
 # ACSys python bindings (pulled via uv git source below)
 dependencies = [
@@ -18,14 +18,12 @@ dependencies = [
 ]
 
 [project.scripts]
-__template-module__ = "__template_module__.main:main"
+ap-python-starter-kit = "ap_python_starter_kit.main:main"
 
 [project.optional-dependencies]
 gui-pyqt = [
   "PyQt6>=6.7"
 ]
-
-tool = {}
 
 [tool.uv]
 dev-dependencies = [

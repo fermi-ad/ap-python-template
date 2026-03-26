@@ -74,7 +74,7 @@ commands:
     exec:
       component: tools
       workingDir: ${PROJECT_SOURCE}
-      commandLine: uv run __template-module__
+      commandLine: uv run ap-python-starter-kit
       group:
         kind: run
         isDefault: true

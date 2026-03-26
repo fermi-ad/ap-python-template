@@ -8,7 +8,7 @@ XPRA_HTML="${XPRA_HTML:-on}"
 # HTML mode: no password needed, no native client auth.
 XPRA_AUTH="${XPRA_AUTH:-none}"
 
-APP_CMD="${APP_CMD:-python -m __template_module__.main}"
+APP_CMD="${APP_CMD:-python -m ap_python_starter_kit.main}"
 XPRA_LOG_FILE="${XPRA_LOG_FILE:-/tmp/xpra.log}"
 APP_LOG_FILE="${APP_LOG_FILE:-/tmp/app.log}"
 

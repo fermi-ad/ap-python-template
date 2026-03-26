@@ -23,7 +23,7 @@ make run
 ## Run a custom CLI command
 
 ```bash
-make run APP_CMD="python -m __template_module__.main --name Container"
+make run APP_CMD="python -m ap_python_starter_kit.main --name Container"
 ```
 
 ## Build (GUI / PyQt)

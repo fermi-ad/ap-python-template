@@ -41,7 +41,7 @@ WORKDIR /app
 USER pyuser:pygroup
 
 ENV PATH="/usr/local/.venv/bin:${PATH}"
-ENV APP_CMD="python -m __template_module__.main"
+ENV APP_CMD="python -m ap_python_starter_kit.main"
 
 ENTRYPOINT ["/usr/local/bin/start.sh"]
 

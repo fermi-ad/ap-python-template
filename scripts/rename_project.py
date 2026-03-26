@@ -45,11 +45,13 @@ class Replacements:
     cli_name: str
 
 
-TEMPLATE_PROJECT = "__template_project_name__"
-TEMPLATE_DESC = "__template_description__"
-TEMPLATE_AUTHOR = "__template_author__"
-TEMPLATE_MODULE = "__template_module__"
-TEMPLATE_CLI = "__template-module__"
+# These are the *starting values* in this repository. End-users run this script to
+# rename them to their real project values.
+TEMPLATE_PROJECT = "ap-python-starter-kit"
+TEMPLATE_DESC = "Python starter kit"
+TEMPLATE_AUTHOR = "Template Maintainers"
+TEMPLATE_MODULE = "ap_python_starter_kit"
+TEMPLATE_CLI = "ap-python-starter-kit"
 
 
 DEFAULT_TARGET_FILES = [
@@ -103,7 +105,14 @@ def _replace_in_text(text: str, repl: Replacements) -> str:
 
 
 def _update_file(path: Path, repl: Replacements, *, check_only: bool) -> bool:
-    original = path.read_text(encoding="utf-8")
+    # Most of the repo is UTF-8 text, but some environments may introduce files
+    # with a different encoding. We treat those as non-targets instead of
+    # crashing the rename.
+    try:
+        original = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return False
+
     updated = _replace_in_text(original, repl)
     if updated == original:
         return False
@@ -191,8 +200,8 @@ def _build_replacements(ns: argparse.Namespace) -> Replacements:
 
     if interactive:
         print("[rename_project] interactive mode")
-        project_name = project_name or _prompt("Project/repo name (kebab-case)", "my-project")
-        module = module or _prompt("Python package name (snake_case)", "my_project")
+        project_name = project_name or _prompt("Project/repo name (kebab-case)", TEMPLATE_PROJECT)
+        module = module or _prompt("Python package name (snake_case)", TEMPLATE_MODULE)
 
     if not project_name:
         _die("missing --project-name (or run interactively)")

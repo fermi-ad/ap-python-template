@@ -1,6 +1,6 @@
-# __template_project_name__
+# ap-python-starter-kit
 
-__template_description__
+Python starter kit
 
 A Python-first project template. The default path is a CLI app with optional, isolated PyQt scaffold support.
 
@@ -37,7 +37,7 @@ Docs: [`docs/che.md`](docs/che.md:1).
 ├── docker/start.sh
 ├── docs/
 ├── scaffolds/pyqt/
-├── src/__template_module__/
+├── src/ap_python_starter_kit/
 ├── tests/
 ├── Dockerfile
 ├── Makefile

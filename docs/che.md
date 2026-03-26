@@ -9,7 +9,7 @@ This repo includes an Eclipse Che devfile at [`.devfile.yaml`](../.devfile.yaml:
   - dependency sync (`uv sync`)
   - tests (`uv run pytest`)
   - lint/format (`uv run ruff ...`)
-  - running the CLI entrypoint (`uv run __template-module__`)
+  - running the CLI entrypoint (`uv run ap-python-starter-kit`)
 - A simple docs endpoint for browsing `docs/` via `python -m http.server` (port 8000)
 
 ## Use
@@ -31,10 +31,10 @@ This repo includes an Eclipse Che devfile at [`.devfile.yaml`](../.devfile.yaml:
 5. Run the CLI app:
 
    ```bash
-   uv run __template-module__
+   uv run ap-python-starter-kit
    ```
 
 ## Notes
 
-- The template placeholders (`__template-module__`, `__template_module__`, etc.) are expected to be replaced when you generate a real project from this template. Update the devfile command [`.devfile.yaml`](../.devfile.yaml:1) `run` accordingly.
+- The template placeholders (`ap-python-starter-kit`, `ap_python_starter_kit`, etc.) are expected to be replaced when you generate a real project from this template. Update the devfile command [`.devfile.yaml`](../.devfile.yaml:1) `run` accordingly.
 - This devfile intentionally uses a stock `uv` image for fast startup. The repo’s [Docker-based workflow](container.md:1) is still available for building runnable images and (optionally) GUI/Xpra targets.

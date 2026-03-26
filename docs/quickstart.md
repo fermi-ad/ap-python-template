@@ -4,10 +4,10 @@
 
 Replace all placeholders:
 
-- `__template_project_name__`
-- `__template_module__`
-- `__template_description__`
-- `__template_author__`
+- `ap-python-starter-kit`
+- `ap_python_starter_kit`
+- `Python starter kit`
+- `Template Maintainers`
 
 ## 2) Install dependencies
 
@@ -20,13 +20,13 @@ uv sync
 By default the CLI runs an ACSys demo query (prints a few readings):
 
 ```bash
-uv run __template-module__
+uv run ap-python-starter-kit
 ```
 
 Override the device/request string:
 
 ```bash
-uv run __template-module__ --device "G:SCTIME@P,15H"
+uv run ap-python-starter-kit --device "G:SCTIME@P,15H"
 ```
 
 ## 4) Run tests and lint

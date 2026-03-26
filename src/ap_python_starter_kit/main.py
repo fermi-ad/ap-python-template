@@ -6,8 +6,8 @@ import asyncio
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="__template-module__",
-        description="CLI entry point for __template_project_name__.",
+        prog="ap-python-starter-kit",
+        description="CLI entry point for ap-python-starter-kit.",
     )
     parser.add_argument(
         "--device",
