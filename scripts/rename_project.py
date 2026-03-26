@@ -2,11 +2,11 @@
 """Rename this template to a real project.
 
 This script replaces the template placeholders:
-- __template_project_name__
-- __template_description__
-- __template_author__
-- __template_module__ (python package directory + import paths)
-- __template-module__ (CLI script name)
+- ap-python-starter-kit
+- Python starter kit
+- Template Maintainers
+- ap_python_starter_kit (python package directory + import paths)
+- ap-python-starter-kit (CLI script name)
 
 It updates common project files and renames the src package directory.
 

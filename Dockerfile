@@ -20,15 +20,15 @@ WORKDIR /install
 RUN dnf install -y gcc gcc-c++ make krb5-devel \
  && dnf clean all
 
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:${PATH}"
+
 # Editable builds require project sources (and README referenced by pyproject).
 COPY pyproject.toml ./
 COPY uv.lock ./
 COPY README.md ./
 COPY src ./src
 COPY scaffolds ./scaffolds
-
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.local/bin:${PATH}"
 
 # Build a venv in /usr/local for simple runtime PATH.
 # Install the package into the venv (non-editable) so runtime doesn't depend on source paths.
@@ -38,6 +38,8 @@ RUN uv venv /usr/local/.venv \
 FROM base AS runtime
 
 COPY --from=builder /usr/local /usr/local
+# Include runtime sources needed for the optional GUI scaffold.
+COPY scaffolds /app/scaffolds
 
 WORKDIR /app
 
@@ -52,6 +54,10 @@ ENTRYPOINT ["/bin/bash","-lc","${APP_CMD}"]
 # Optional GUI runtime target for host X server usage.
 FROM runtime AS runtime-gui
 
+# runtime switches to non-root (pyuser) in the `runtime` stage.
+# Switch back to root temporarily to install OS packages.
+USER root
+
 # Install GUI runtime libs + PyQt.
 RUN dnf install -y \
       libxcb \
@@ -64,10 +70,20 @@ RUN dnf install -y \
       xcb-util-wm \
       xcb-util-cursor \
       mesa-libGL \
+      mesa-libEGL \
+      dbus-libs \
       fontconfig \
  && dnf clean all
 
+# Install uv into the runtime-gui layer (the base runtime image intentionally doesn't include it).
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:${PATH}"
+
+# Keep running as root for the optional dependency install so `uv` (in /root/.local/bin)
+# is available on PATH; then drop back to non-root for runtime execution.
 RUN uv pip install --python /usr/local/.venv/bin/python --no-cache-dir "PyQt6>=6.7"
+
+USER pyuser:pygroup
 
 ENV APP_CMD="python /app/scaffolds/pyqt/app.py"
 
@@ -89,7 +105,6 @@ RUN dnf install -y \
  && dnf clean all
 
 # (python is already present from `base`)
-RUN dnf install -y python3.12-tkinter
 RUN dnf install -y \
       libxcb \
       libxkbcommon \
@@ -145,9 +160,8 @@ USER pyuser:pygroup
 
 ENV PATH="/usr/local/.venv/bin:${PATH}"
 
-# Xpra HTML on :14500 with no auth.
+# Xpra HTML on :14500.
 ENV XPRA_HTML=on
-ENV XPRA_AUTH=none
 EXPOSE 14500
 
 # Default to PyQt scaffold in Xpra image.

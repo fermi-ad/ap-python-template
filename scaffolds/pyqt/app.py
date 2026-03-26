@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import QApplication, QLabel, QMainWindow, QVBoxLayout, QWid
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("__template_project_name__ - PyQt + ACSys")
+        self.setWindowTitle("ap-python-starter-kit - PyQt + ACSys")
 
         self._label = QLabel("Waiting for ACSys data...")
         self._label.setTextInteractionFlags(self._label.textInteractionFlags())
