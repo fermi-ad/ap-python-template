@@ -65,8 +65,6 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: adregistry.fnal.gov/ap-python/${{ github.event.repository.name }}
-          flavor: |
-            suffix=-${{ inputs.image-variant || github.event.inputs.image-variant || 'cli' }}
           tags: |
             # This is the default tag for the last commit of the default branch
             type=edge
