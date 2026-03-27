@@ -9,6 +9,15 @@ on:
         type: boolean
         default: false
 
+      image-variant:
+        description: 'Which container image variant to build and deploy.'
+        required: false
+        type: choice
+        default: cli
+        options:
+          - cli
+          - gui-xpra
+
   workflow_call:
     inputs:
       pull-git-submodules:
@@ -16,6 +25,12 @@ on:
         type: boolean
         default: false
         description: 'Indicates whether this repository has Git submodules to pull.'
+
+      image-variant:
+        required: false
+        type: string
+        default: cli
+        description: 'Which container image variant to build and deploy (cli or gui-xpra).'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -50,6 +65,8 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: adregistry.fnal.gov/ap-python/${{ github.event.repository.name }}
+          flavor: |
+            suffix=-${{ inputs.image-variant || github.event.inputs.image-variant || 'cli' }}
           tags: |
             # This is the default tag for the last commit of the default branch
             type=edge
