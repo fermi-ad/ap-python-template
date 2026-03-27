@@ -11,13 +11,13 @@ XPRA_BIND_HOST ?= 0.0.0.0
 help:
 	@echo "Available targets:"
 	@echo "  make build                                   Build CLI Docker image ($(IMAGE_NAME))"
-	@echo "  make build-gui                               Build GUI via Xpra (HTML) Docker image ($(IMAGE_NAME_XPRA))"
+	@echo "  make build-gui                               Build GUI via Xpra (HTML) Docker image ($(IMAGE_NAME_GUI))"
 	@echo "  make build-no-cache                          Build CLI Docker image ($(IMAGE_NAME)) without cache"
 	@echo "  make run [APP_CMD=...]                       Run CLI container (defaults to template CLI)"
 	@echo "  make run-gui [XPRA_PORT=14500] [APP_CMD=...] Run GUI + Xpra HTML container (PyQt scaffold)"
 	@echo "  make shell                                   Open an interactive shell in CLI container"
 	@echo "  make shell-gui                               Open an interactive shell in GUI + Xpra container"
-	@echo "  make clean                                   Remove Docker images ($(IMAGE_NAME), $(IMAGE_NAME_GUI), $(IMAGE_NAME_XPRA))"
+	@echo "  make clean                                   Remove Docker images ($(IMAGE_NAME), $(IMAGE_NAME_GUI))"
 
 build:
 	docker build --target runtime -t $(IMAGE_NAME) .
