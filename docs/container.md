@@ -3,8 +3,7 @@
 This template includes a Docker-based workflow with:
 
 - a **CLI-first** default image (smallest/safest)
-- an **opt-in GUI** image target for PyQt (host X server)
-- an **opt-in Xpra HTML** deployment image target (AlmaLinux + Xpra)
+- an **opt-in GUI (Xpra HTML)** image target for running a PyQt app in-container and viewing it in a browser
 
 ## Build (CLI)
 
@@ -26,36 +25,20 @@ make run
 make run APP_CMD="python -m ap_python_starter_kit.main --name Container"
 ```
 
-## Build (GUI / PyQt)
+## Build (GUI / Xpra HTML)
 
-Build the optional GUI image target (`runtime-gui`) from [`Dockerfile`](Dockerfile):
+Build the optional GUI image target (`xpra-runtime`) from [`Dockerfile`](Dockerfile:1):
 
 ```bash
 make build-gui
 ```
 
-## Run (GUI / PyQt)
-
-This uses your host X server (mounts `/tmp/.X11-unix`).
-
-```bash
-make run-gui
-```
-
-## Build (Xpra / HTML)
-
-Build the optional Xpra image target (`xpra-runtime`) from [`Dockerfile`](Dockerfile):
-
-```bash
-make build-xpra
-```
-
-## Run (Xpra / HTML)
+## Run (GUI / Xpra HTML)
 
 This runs a PyQt app inside the container and serves it via Xpra's built-in HTML client.
 
 ```bash
-make run-xpra
+make run-gui
 ```
 
 Then open:
@@ -67,13 +50,13 @@ http://localhost:14500/
 Custom port:
 
 ```bash
-make run-xpra XPRA_PORT=16000
+make run-gui XPRA_PORT=16000
 ```
 
 Custom command:
 
 ```bash
-make run-xpra APP_CMD="python /app/scaffolds/pyqt/app.py"
+make run-gui APP_CMD="python /app/scaffolds/pyqt/app.py"
 ```
 
 Security note:
@@ -85,5 +68,4 @@ Security note:
 ```bash
 make shell
 make shell-gui
-make shell-xpra
 ```

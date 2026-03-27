@@ -37,4 +37,4 @@ This repo includes an Eclipse Che devfile at [`.devfile.yaml`](../.devfile.yaml:
 ## Notes
 
 - The template placeholders (`ap-python-starter-kit`, `ap_python_starter_kit`, etc.) are expected to be replaced when you generate a real project from this template. Update the devfile command [`.devfile.yaml`](../.devfile.yaml:1) `run` accordingly.
-- This devfile intentionally uses a stock `uv` image for fast startup. The repo’s [Docker-based workflow](container.md:1) is still available for building runnable images and (optionally) GUI/Xpra targets.
+- This devfile intentionally uses a stock `uv` image for fast startup. The repo’s [Docker-based workflow](container.md:1) is still available for building runnable images and an optional GUI (Xpra HTML) target.
