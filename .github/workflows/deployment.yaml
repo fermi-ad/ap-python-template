@@ -33,16 +33,6 @@ jobs:
         with:
           submodules: ${{ (inputs.pull-git-submodules || github.event.inputs.pull-git-submodules == 'true') && 'recursive' || 'false' }}
 
-      - name: Generate xpra password file for Docker build
-        run: |
-          if [ -z "${{ secrets.XPRA_PASSWORD }}" ]; then
-            echo "XPRA_PASSWORD secret is required for build" >&2
-            exit 1
-          fi
-          mkdir -p xpra
-          umask 077
-          printf '%s\n' "${{ secrets.XPRA_PASSWORD }}" > xpra/password.txt
-
       - name: Generate a token
         id: generate-token
         uses: actions/create-github-app-token@v1
