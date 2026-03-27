@@ -89,5 +89,7 @@ jobs:
         with:
           context: .
           push: true
+          # Build the correct Dockerfile target based on the selected image variant.
+          target: ${{ (inputs.image-variant || github.event.inputs.image-variant || 'cli') == 'gui-xpra' && 'xpra-runtime' || 'runtime' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
