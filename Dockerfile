@@ -25,7 +25,6 @@ ENV PATH="/root/.local/bin:${PATH}"
 
 # Editable builds require project sources (and README referenced by pyproject).
 COPY pyproject.toml ./
-COPY uv.lock ./
 COPY README.md ./
 COPY src ./src
 COPY scaffolds ./scaffolds
@@ -132,7 +131,6 @@ RUN dnf install -y gcc gcc-c++ make krb5-devel && dnf clean all
 
 # Editable builds require project sources (and README referenced by pyproject).
 COPY pyproject.toml ./
-COPY uv.lock ./
 COPY README.md ./
 COPY src ./src
 COPY scaffolds ./scaffolds
