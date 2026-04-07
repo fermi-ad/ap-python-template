@@ -1,24 +1,28 @@
 {
-    "name": "ap-python",
-    "image": "adregistry.fnal.gov/dev-containers/ap-python:latest",
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "ms-python.python",
-                "ms-python.vscode-pylance",
-                "charliermarsh.ruff"
-            ],
-            "settings": {
-                "[python]": {
-                    "analysis.typeCheckingMode": "strict",
-                    "editor.formatOnSave": true,
-                    "editor.defaultFormatter": "charliermarsh.ruff",
-                    "editor.codeActionsOnSave": {
-                        "source.fixAll.ruff": "explicit",
-                        "source.organizeImports.ruff": "explicit"
-                    }
-                }
-            }
-        }
-    }
+	"name": "ap-python",
+	"image": "adregistry.fnal.gov/dev-containers/ap-python:latest",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"charliermarsh.ruff",
+				"github.vscode-pull-request-github"
+			],
+			"settings": {
+				"analysis.typeCheckingMode": "strict",
+				"python.defaultInterpreterPath": ".venv/bin/python",
+				"editor.formatOnSave": true,
+				"terminal.integrated.inheritEnv": true,
+				"[python]": {
+					"editor.defaultFormatter": "charliermarsh.ruff",
+					"editor.codeActionsOnSave": {
+						"source.fixAll.ruff": "explicit",
+						"source.organizeImports.ruff": "explicit"
+					}
+				}
+			},
+			"postCreateCommand": "uv sync && uv run pre-commit install"
+		}
+	}
 }
