@@ -21,17 +21,18 @@ A Python-first project template. The default path is a CLI app with optional, is
 
 Detailed onboarding is in [`docs/quickstart.md`](docs/quickstart.md).
 
-## Eclipse Che / Dev Spaces
+## DevPod / Dev Container
 
-This repo includes an Eclipse Che devfile at [`.devfile.yaml`](.devfile.yaml:1).
+This repo includes a Dev Container descriptor file at [`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json). It is recommended to [install DevPod](https://devpod.sh/docs/getting-started/install) so that you can take advantage of the prebuilt development environment it provides. 
 
-Docs: [`docs/che.md`](docs/che.md:1).
+Read more about DevPod [here](https://devpod.sh/docs/what-is-devpod)
+
+Docs: [`docs/devpod.md`](docs/devpod.md).
 
 ## Project Layout
 
 ```text
 .
-├── .devfile.yaml
 ├── .devcontainer/
 ├── .github/workflows/
 ├── docker/start.sh
@@ -45,10 +46,10 @@ Docs: [`docs/che.md`](docs/che.md:1).
 └── README.md
 ```
 
-## Container and Che
+## Deployment Container
+Once your app is ready to deploy, a container and Dockerfile have been provided for easy setup. Read more below:
 
 - Container usage: [`docs/container.md`](docs/container.md)
-- Eclipse Che usage: [`docs/che.md`](docs/che.md)
 
 ## Optional PyQt Scaffold
 

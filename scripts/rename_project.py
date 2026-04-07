@@ -25,15 +25,14 @@ Notes:
 from __future__ import annotations
 
 import argparse
-import os
 import re
 import shutil
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
+BASHRC_PATH = Path.home() / ".bashrc"
 
 
 @dataclass(frozen=True)
@@ -61,8 +60,8 @@ DEFAULT_TARGET_FILES = [
     "docker/start.sh",
     "Makefile",
     "README.md",
-    "docs/che.md",
     "docs/container.md",
+    "docs/devpod.md",
     "docs/quickstart.md",
     "tests/test_main.py",
 ]
@@ -145,6 +144,7 @@ def _gather_files(explicit: list[str] | None) -> list[Path]:
         files = [REPO_ROOT / p for p in explicit]
     else:
         files = [REPO_ROOT / p for p in DEFAULT_TARGET_FILES]
+        files.append(BASHRC_PATH)
 
     # Also update any files under src/<template_module>/ and docs/optional-pyqt.md if present.
     src_template = REPO_ROOT / "src" / TEMPLATE_MODULE
@@ -262,7 +262,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if ns.check:
         for f in changed_files:
-            rel = f.relative_to(REPO_ROOT)
+            rel = BASHRC_PATH if f == BASHRC_PATH else f.relative_to(REPO_ROOT)
             print(f"[rename_project] would update: {rel}")
         if renamed_pkg:
             print(f"[rename_project] would rename: src/{TEMPLATE_MODULE}/ -> src/{repl.module}/")
@@ -271,8 +271,13 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     for f in changed_files:
-        rel = f.relative_to(REPO_ROOT)
-        print(f"[rename_project] updated: {rel}")
+        if f == BASHRC_PATH:
+            print(
+                f"[rename_project] updated: {f} (run 'source ~/.bashrc' to apply CLI alias changes)"
+            )
+        else:
+            rel = f.relative_to(REPO_ROOT)
+            print(f"[rename_project] updated: {rel}")
     if renamed_pkg:
         print(f"[rename_project] renamed: src/{TEMPLATE_MODULE}/ -> src/{repl.module}/")
 
