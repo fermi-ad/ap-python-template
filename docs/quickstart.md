@@ -12,7 +12,7 @@ Replace all placeholders:
 ## 2) Install dependencies
 
 ```bash
-uv sync
+$ uv sync
 ```
 
 ## 3) Run the CLI app
@@ -20,20 +20,20 @@ uv sync
 By default the CLI runs an ACSys demo query (prints a few readings):
 
 ```bash
-uv run ap-python-starter-kit
+$ run
 ```
 
 Override the device/request string:
 
 ```bash
-uv run ap-python-starter-kit --device "G:SCTIME@P,15H"
+$ run --device "G:SCTIME@P,15H"
 ```
 
 ## 4) Run tests and lint
 
 ```bash
-uv run pytest
-uv run ruff check .
+$ test
+$ lint
 ```
 
 ## 5) Optional: enable PyQt scaffold
