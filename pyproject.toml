@@ -8,28 +8,18 @@ version = "0.1.0"
 description = "Python starter kit"
 readme = "README.md"
 requires-python = ">=3.12"
-authors = [
-  { name = "Template Maintainers" }
-]
+authors = [{ name = "Template Maintainers" }]
 # ACSys python bindings (pulled via uv git source below)
-dependencies = [
-  "acsys",
-  "acsys[settings]",
-]
+dependencies = ["acsys", "acsys[settings]"]
 
 [project.scripts]
 ap-python-starter-kit = "ap_python_starter_kit.main:main"
 
 [project.optional-dependencies]
-gui-pyqt = [
-  "PyQt6~=6.10"
-]
+gui-pyqt = ["PyQt6~=6.10"]
 
 [dependency-groups]
-dev = [
-  "pytest~=9.0",
-  "ruff~=0.15"
-]
+dev = ["pytest~=9.0", "ruff~=0.15", "pre-commit~=4.5"]
 
 [tool.uv.sources]
 # Pull from git, matching the reference container example.
