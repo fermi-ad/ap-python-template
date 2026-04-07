@@ -10,7 +10,7 @@
 				"github.vscode-pull-request-github"
 			],
 			"settings": {
-				"analysis.typeCheckingMode": "strict",
+				"python.analysis.typeCheckingMode": "strict",
 				"python.defaultInterpreterPath": ".venv/bin/python",
 				"editor.formatOnSave": true,
 				"terminal.integrated.inheritEnv": true,
