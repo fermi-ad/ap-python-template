@@ -1,0 +1,62 @@
+name: Continuous Integration & Continuous Delivery
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  # The list of files and directories to exclude from code coverage analysis, separated by pipe ('|') characters. This typically includes:
+  # - The 'tests' directory (contains test code, not application code)
+  # - The 'docs' directory (contains documentation, not application code)
+  # - The 'examples' directory (contains example code, not application code)
+  # If the code coverage step throws an error, be sure to check that files are not being excluded here that get seen by the coverage tool.
+  COV_EXCLUDE: 'tests/|docs/|examples/'
+  
+  # Determines the container image variant to build and deploy. 'gui-xpra' builds a deployment with GUI support, while 'cli' builds a deployment without GUI support.
+  IMAGE_VARIANT: gui-xpra
+  
+  # A space-separated list of system packages to install on the GitHub Action host machine. This is useful for installing
+  # OS-level dependencies that your application relies on.
+  # For example, the acsys python package requires the 'libkrb5-dev' (Kerberos) package to be installed.
+  SYSTEM_PACKAGES: libkrb5-dev
+  
+
+jobs:
+  setup: # This job is used to translate the local environment variables into outputs that can be used by other jobs. It runs first and both the analysis and deployment jobs depend on it.
+    runs-on: ubuntu-latest
+    outputs:
+      cov_exclude: ${{ steps.setup.outputs.COV_EXCLUDE }}
+      image_variant: ${{ steps.setup.outputs.IMAGE_VARIANT }}
+      system_packages: ${{ steps.setup.outputs.SYSTEM_PACKAGES }}
+    steps:
+      - name: Setup Step
+        id: setup
+        run: |
+          echo "COV_EXCLUDE=$COV_EXCLUDE" >> $GITHUB_OUTPUT
+          echo "IMAGE_VARIANT=$IMAGE_VARIANT" >> $GITHUB_OUTPUT
+          echo "SYSTEM_PACKAGES=$SYSTEM_PACKAGES" >> $GITHUB_OUTPUT
+
+  integration:
+    needs: setup
+    uses: fermi-ad/.github/.github/workflows/ap-python-integration.yaml@main
+    secrets: inherit
+    permissions:
+      contents: read
+      pull-requests: write # Allows coverage report to be added as a comment to the pull request
+    with:
+      coverage-exclude: ${{ needs.setup.outputs.cov_exclude }}
+      static-dependencies: ${{ needs.setup.outputs.system_packages }}
+
+  delivery:
+    needs: [ setup, integration ]
+    if: ${{ github.event_name == 'push' }} # Only deploys on pushes to main, not on pull request events
+    uses: fermi-ad/.github/.github/workflows/ap-python-deployment.yaml@main
+    secrets: inherit
+    permissions:
+      contents: write # Allows coverage report to be attached to the commit status
+    with:
+      image-variant: ${{ needs.setup.outputs.image_variant }}
