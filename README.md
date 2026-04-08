@@ -55,4 +55,10 @@ Once your app is ready to deploy, a container and Dockerfile have been provided 
 
 PyQt is intentionally isolated from the default template flow.
 
-See [`docs/optional-pyqt.md`](docs/optional-pyqt.md) for setup and usage.
+See [`scaffolds/pyqt/README.md`](scaffolds/pyqt/README.md) for setup and usage.
+
+## CI/CD
+
+This template comes preconfigured for Continuous Integration and Continuous Delivery. When opening a pull request, your code will automatically be checked for formatting errors and common coding pitfalls, verified to compile, and all tests will be run. A report of how much of the executable code is covered by the tests will be added to your pull request as well. The [`ci-cd.yaml`](.github/workflows/ci-cd.yaml) file contains values in the `env` section that you can configure to adjust the automated build slightly.
+
+Upon merging changes in to the `main` branch, your application will be built and packaged into a container. By default, the container will attempt to provide a PyQt GUI scaffold, so your application's GUI can be launched from Kubernetes. If your application is intended as a headless service, or works better from the command line, update the `IMAGE_VARIANT` variable in the `ci-cd.yaml` file to be `cli` instead of the default `gui-xpra`. 
