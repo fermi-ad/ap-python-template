@@ -19,7 +19,12 @@ ap-python-starter-kit = "ap_python_starter_kit.main:main"
 gui-pyqt = ["PyQt6~=6.10"]
 
 [dependency-groups]
-dev = ["pytest~=9.0", "ruff~=0.15", "pre-commit~=4.5"]
+dev = [
+    "pytest~=9.0",
+    "ruff~=0.15",
+    "pre-commit~=4.5",
+    "pytest-cov>=7.1.0",
+]
 
 [tool.uv.sources]
 # Pull from git, matching the reference container example.
