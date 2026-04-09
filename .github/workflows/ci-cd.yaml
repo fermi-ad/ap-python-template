@@ -6,7 +6,7 @@ on:
       - main
   pull_request:
     branches:
-      - main
+      - '**'
 
 env:
   # The list of files and directories to exclude from code coverage analysis, separated by pipe ('|') characters. This typically includes:
