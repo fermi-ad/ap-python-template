@@ -54,7 +54,7 @@ jobs:
   delivery:
     needs: [ setup, integration ]
     # Only deploys on pushes to main, not on pull request events. Also skips the first run of the workflow, which gets triggered when the new repository is created from the template.
-    if: ${{ github.run_number != 1 }} && ${{ github.event_name == 'push' }} 
+    if: github.run_number != 1 && github.event_name == 'push'
     uses: fermi-ad/.github/.github/workflows/ap-python-deployment.yaml@main
     secrets: inherit
     permissions:
