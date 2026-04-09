@@ -26,7 +26,7 @@ env:
   
 
 jobs:
-  setup: # This job is used to translate the local environment variables into outputs that can be used by other jobs. It runs first and both the analysis and deployment jobs depend on it.
+  setup: # This job is used to translate the local environment variables into outputs that can be used by other jobs. It runs first and both the integration and delivery jobs depend on it.
     runs-on: ubuntu-latest
     outputs:
       cov_exclude: ${{ steps.setup.outputs.COV_EXCLUDE }}
