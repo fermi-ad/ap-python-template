@@ -48,7 +48,7 @@ xpra start "${XPRA_DISPLAY}" \
   --exit-with-children=yes \
   --exit-with-windows=yes \
   --exit-with-client=yes \
-  --server-idle-timeout=30 \
+  --server-idle-timeout=300 \
   --start-child="/bin/bash -lc '${APP_CMD} >>\"${APP_LOG_FILE}\" 2>&1'" \
   --pulseaudio=no \
   --notifications=no \
