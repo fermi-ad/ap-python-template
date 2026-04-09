@@ -45,7 +45,7 @@ jobs:
     uses: fermi-ad/.github/.github/workflows/ap-python-integration.yaml@main
     secrets: inherit
     permissions:
-      contents: read
+      contents: write # Allows coverage report to be attached to the commit status (push to main)
       pull-requests: write # Allows coverage report to be added as a comment to the pull request
     with:
       coverage-exclude: ${{ needs.setup.outputs.cov_exclude }}
@@ -57,7 +57,5 @@ jobs:
     if: github.run_number != 1 && github.event_name == 'push'
     uses: fermi-ad/.github/.github/workflows/ap-python-deployment.yaml@main
     secrets: inherit
-    permissions:
-      contents: write # Allows coverage report to be attached to the commit status
     with:
       image-variant: ${{ needs.setup.outputs.image_variant }}
