@@ -16,7 +16,7 @@ help:
 	@echo "  make docs-serve                              Serve documentation from ./docs at http://localhost:8000/"
 	@echo "  make format                                  Format code using ruff"
 	@echo "  make lint                                    Lint code using ruff"
-	@echo "  make rename-project                          Rename project (update template names in files and src/ package, and rename Docker images in Makefile). See 'make rename-project --help' for details and options."
+	@echo "  make rename-project                          Rename project (update template names in files and src/ package, and rename Docker images in Makefile)"
 	@echo "  make run [APP_CMD=...]                       Run CLI container (defaults to template CLI)"
 	@echo "  make run-gui [XPRA_PORT=14500] [APP_CMD=...] Run GUI + Xpra HTML container (PyQt scaffold)"
 	@echo "  make run-uv [APP_CMD=...]                    Run project locally using uv (defaults to template CLI)"

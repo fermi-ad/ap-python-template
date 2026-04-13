@@ -15,7 +15,7 @@ Usage (interactive, recommended):
 
 Usage (non-interactive):
   python3 scripts/rename_project.py --project-name my-proj --module my_proj \
-    --description "My project" --author "Your Name"
+    --author "Your Name" --description "My project" [--cli-name my-proj]
 
 Notes:
 - Run from the repository root.
@@ -25,9 +25,12 @@ Notes:
 from __future__ import annotations
 
 import argparse
+import contextlib
+import os
 import re
 import shutil
 import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -53,7 +56,7 @@ TEMPLATE_MODULE = "ap_python_starter_kit"
 TEMPLATE_CLI = "ap-python-starter-kit"
 
 
-DEFAULT_TARGET_FILES = [
+TARGET_FILES = [
     ".devfile.yaml",
     "pyproject.toml",
     "Dockerfile",
@@ -117,8 +120,70 @@ def _update_file(path: Path, repl: Replacements, *, check_only: bool) -> bool:
     if updated == original:
         return False
     if not check_only:
-        path.write_text(updated, encoding="utf-8")
+        _write_file_atomic(path, updated)
     return True
+
+
+def _write_file_atomic(path: Path, content: str) -> None:
+    """Write *content* to *path* atomically using a sibling temp file + os.replace().
+
+    On POSIX systems os.replace() is a single rename(2) syscall, so readers of
+    *path* will always see either the old or the new content — never a partial
+    write.
+    """
+    fd, tmp_path = tempfile.mkstemp(dir=path.parent, prefix=".rename_tmp_")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(content)
+        os.replace(tmp_path, path)
+    except BaseException:
+        # Clean up the orphaned temp file before propagating.
+        with contextlib.suppress(OSError):
+            os.unlink(tmp_path)
+        raise
+
+
+@contextlib.contextmanager
+def _atomic_rename_context(files: list[Path], old_pkg_dir: Path, new_pkg_dir: Path):
+    """Context manager that makes all rename mutations atomic as a group.
+
+    Before yielding, a full in-memory snapshot of every target file's bytes is
+    taken. If any exception (including KeyboardInterrupt) escapes the ``with``
+    block the snapshot is restored and the package-directory rename is reversed.
+    """
+    # --- snapshot -----------------------------------------------------------
+    backups: dict[Path, bytes] = {}
+    for f in files:
+        if f.exists() and f.is_file():
+            backups[f] = f.read_bytes()
+
+    try:
+        yield
+    except BaseException:
+        # --- rollback -------------------------------------------------------
+        print("[rename_project] error during rename — rolling back changes", file=sys.stderr)
+
+        # Restore file contents from the in-memory snapshot.
+        for path, data in backups.items():
+            try:
+                path.write_bytes(data)
+            except OSError as exc:
+                print(
+                    f"[rename_project] warning: could not restore {path}: {exc}",
+                    file=sys.stderr,
+                )
+
+        # Reverse the package directory rename if it happened.
+        if new_pkg_dir.exists() and not old_pkg_dir.exists():
+            try:
+                shutil.move(str(new_pkg_dir), str(old_pkg_dir))
+            except OSError as exc:
+                print(
+                    f"[rename_project] warning: could not restore package dir: {exc}",
+                    file=sys.stderr,
+                )
+
+        raise
 
 
 def _rename_package_dir(repl: Replacements, *, check_only: bool) -> bool:
@@ -139,12 +204,9 @@ def _rename_package_dir(repl: Replacements, *, check_only: bool) -> bool:
     return True
 
 
-def _gather_files(explicit: list[str] | None) -> list[Path]:
-    if explicit:
-        files = [REPO_ROOT / p for p in explicit]
-    else:
-        files = [REPO_ROOT / p for p in DEFAULT_TARGET_FILES]
-        files.append(BASHRC_PATH)
+def _gather_files() -> list[Path]:
+    files = [REPO_ROOT / p for p in TARGET_FILES]
+    files.append(BASHRC_PATH)
 
     # Also update any files under src/<template_module>/ and docs/optional-pyqt.md if present.
     src_template = REPO_ROOT / "src" / TEMPLATE_MODULE
@@ -168,7 +230,9 @@ def _gather_files(explicit: list[str] | None) -> list[Path]:
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
-    p = argparse.ArgumentParser(description=__doc__)
+    p = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     p.add_argument("--project-name", help="Distribution/repo name (e.g. my-project)")
     p.add_argument("--module", help="Python package name (e.g. my_project)")
     p.add_argument("--description", default=None, help="Project description")
@@ -178,54 +242,43 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         default=None,
         help="Console script name (kebab-case). Default: <module> with underscores -> hyphens",
     )
-    p.add_argument(
-        "--files",
-        nargs="*",
-        default=None,
-        help="Optional explicit list of files to update (relative paths).",
-    )
     p.add_argument("--check", action="store_true", help="Dry-run; print what would change")
-    p.add_argument(
-        "--non-interactive",
-        action="store_true",
-        help="Fail if required fields are missing instead of prompting",
-    )
     return p.parse_args(argv)
 
 
 def _build_replacements(ns: argparse.Namespace) -> Replacements:
-    interactive = (not ns.non_interactive) and sys.stdin.isatty()
+    any_provided = any([ns.project_name, ns.module, ns.description, ns.author, ns.cli_name])
+    interactive = (not any_provided) and sys.stdin.isatty()
 
     project_name = ns.project_name
     module = ns.module
-
-    if interactive:
-        print("[rename_project] interactive mode")
-        project_name = project_name or _prompt("Project/repo name (kebab-case)", TEMPLATE_PROJECT)
-        module = module or _prompt("Python package name (snake_case)", TEMPLATE_MODULE)
-
-    if not project_name:
-        _die("missing --project-name (or run interactively)")
-    if not module:
-        _die("missing --module (or run interactively)")
-
-    _validate_identifier(module)
-
-    default_cli = module.replace("_", "-")
 
     description = ns.description
     author = ns.author
     cli_name = ns.cli_name
 
     if interactive:
-        description = "" if description is None else description
-        author = "" if author is None else author
-        cli_name = cli_name or _prompt("CLI command name", default_cli)
+        print("[rename_project] interactive mode")
+        project_name = project_name or _prompt("Project/repo name (kebab-case)")
+        module = module or _prompt("Python package name (snake_case)")
+        author = author or _prompt("Author")
+        description = description or _prompt("Description")
 
-        if description == "":
-            description = _prompt("Description", "")
-        if author == "":
-            author = _prompt("Author", "")
+    if not project_name:
+        _die("missing --project-name")
+    if not module:
+        _die("missing --module")
+    if not author:
+        _die("missing --author")
+    if not description:
+        _die("missing --description")
+
+    _validate_identifier(module)
+
+    default_cli = module.replace("_", "-")
+
+    if interactive:
+        cli_name = cli_name or _prompt("CLI command name", default_cli)
 
     description = "" if description is None else description
     author = "" if author is None else author
@@ -249,18 +302,19 @@ def main(argv: list[str] | None = None) -> int:
     if Path.cwd().resolve() != REPO_ROOT:
         _die(f"run from repo root: {REPO_ROOT}")
 
-    files = _gather_files(ns.files)
-
-    changed_files: list[Path] = []
-    for f in files:
-        if not f.exists() or f.is_dir():
-            continue
-        if _update_file(f, repl, check_only=ns.check):
-            changed_files.append(f)
-
-    renamed_pkg = _rename_package_dir(repl, check_only=ns.check)
+    files = _gather_files()
 
     if ns.check:
+        # Dry-run: no mutations, no need for the atomic context.
+        changed_files: list[Path] = []
+        for f in files:
+            if not f.exists() or f.is_dir():
+                continue
+            if _update_file(f, repl, check_only=True):
+                changed_files.append(f)
+
+        renamed_pkg = _rename_package_dir(repl, check_only=True)
+
         for f in changed_files:
             rel = BASHRC_PATH if f == BASHRC_PATH else f.relative_to(REPO_ROOT)
             print(f"[rename_project] would update: {rel}")
@@ -269,6 +323,21 @@ def main(argv: list[str] | None = None) -> int:
         if not changed_files and not renamed_pkg:
             print("[rename_project] no changes detected")
         return 0
+
+    # Live run: wrap all mutations in the atomic context so that any failure
+    # (including KeyboardInterrupt) triggers a full rollback.
+    old_pkg_dir = REPO_ROOT / "src" / TEMPLATE_MODULE
+    new_pkg_dir = REPO_ROOT / "src" / repl.module
+
+    changed_files = []
+    with _atomic_rename_context(files, old_pkg_dir, new_pkg_dir):
+        for f in files:
+            if not f.exists() or f.is_dir():
+                continue
+            if _update_file(f, repl, check_only=False):
+                changed_files.append(f)
+
+        renamed_pkg = _rename_package_dir(repl, check_only=False)
 
     for f in changed_files:
         if f == BASHRC_PATH:
