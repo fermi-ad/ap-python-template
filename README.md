@@ -6,21 +6,21 @@ A Python-first project template. The default path is a CLI app with optional, is
 
 ## Quickstart
 
-1. Rename the template to your project:
+1. **Do not** clone this repo! Instead, click "**Use this template**" at the top right of its GitHub page, then click "**Create a new repository**" and complete the form to create a new repo using this template.
+
+2. Rename the template to make it your own project:
 
    ```bash
    python3 scripts/rename_project.py
    ```
 
-   (Non-interactive usage is also supported, see [`scripts/rename_project.py`](scripts/rename_project.py).)
-
-2. Install dependencies:
+3. Install dependencies:
 
    ```bash
    uv sync
    ```
 
-3. Run the CLI app:
+4. Run the CLI app:
 
    ```bash
    uv run [project_name]

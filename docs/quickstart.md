@@ -9,6 +9,14 @@ Replace all placeholders:
 - `Python starter kit`
 - `Template Maintainers`
 
+Or use the convenience script:
+
+```bash
+python3 scripts/rename_project.py
+```
+
+(Non-interactive usage is also supported; run `python3 scripts/rename_project.py -h` to see options.)
+
 ## 2) Install dependencies
 
 ```bash
