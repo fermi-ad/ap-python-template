@@ -40,6 +40,22 @@ jobs:
           echo "IMAGE_VARIANT=$IMAGE_VARIANT" >> $GITHUB_OUTPUT
           echo "SYSTEM_PACKAGES=$SYSTEM_PACKAGES" >> $GITHUB_OUTPUT
 
+  check-renamed:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify rename script has been run
+        # The template repo (fermi-ad/ap-python-template) is allowed to keep the placeholder name.
+        # Any repo created from the template must run scripts/rename_project.py before pushing an image.
+        if: github.repository != 'fermi-ad/ap-python-template'
+        run: |
+          if grep -q "ap-python-starter-kit" pyproject.toml; then
+            echo "ERROR: This repository still contains template placeholder names."
+            echo "Please run 'python3 scripts/rename_project.py' and commit the result before pushing."
+            exit 1
+          fi
+
   integration:
     needs: setup
     uses: fermi-ad/.github/.github/workflows/ap-python-integration.yaml@main
@@ -52,7 +68,7 @@ jobs:
       static-dependencies: ${{ needs.setup.outputs.system_packages }}
 
   delivery:
-    needs: [ setup, integration ]
+    needs: [ setup, integration, check-renamed ]
     # Only deploys on pushes to main, not on pull request events. Also skips the first run of the workflow, which gets triggered when the new repository is created from the template.
     if: github.run_number != 1 && github.event_name == 'push'
     uses: fermi-ad/.github/.github/workflows/ap-python-deployment.yaml@main
