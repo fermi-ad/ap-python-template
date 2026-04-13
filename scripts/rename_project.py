@@ -25,9 +25,12 @@ Notes:
 from __future__ import annotations
 
 import argparse
+import contextlib
+import os
 import re
 import shutil
 import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -117,8 +120,70 @@ def _update_file(path: Path, repl: Replacements, *, check_only: bool) -> bool:
     if updated == original:
         return False
     if not check_only:
-        path.write_text(updated, encoding="utf-8")
+        _write_file_atomic(path, updated)
     return True
+
+
+def _write_file_atomic(path: Path, content: str) -> None:
+    """Write *content* to *path* atomically using a sibling temp file + os.replace().
+
+    On POSIX systems os.replace() is a single rename(2) syscall, so readers of
+    *path* will always see either the old or the new content — never a partial
+    write.
+    """
+    fd, tmp_path = tempfile.mkstemp(dir=path.parent, prefix=".rename_tmp_")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(content)
+        os.replace(tmp_path, path)
+    except BaseException:
+        # Clean up the orphaned temp file before propagating.
+        with contextlib.suppress(OSError):
+            os.unlink(tmp_path)
+        raise
+
+
+@contextlib.contextmanager
+def _atomic_rename_context(files: list[Path], old_pkg_dir: Path, new_pkg_dir: Path):
+    """Context manager that makes all rename mutations atomic as a group.
+
+    Before yielding, a full in-memory snapshot of every target file's bytes is
+    taken. If any exception (including KeyboardInterrupt) escapes the ``with``
+    block the snapshot is restored and the package-directory rename is reversed.
+    """
+    # --- snapshot -----------------------------------------------------------
+    backups: dict[Path, bytes] = {}
+    for f in files:
+        if f.exists() and f.is_file():
+            backups[f] = f.read_bytes()
+
+    try:
+        yield
+    except BaseException:
+        # --- rollback -------------------------------------------------------
+        print("[rename_project] error during rename — rolling back changes", file=sys.stderr)
+
+        # Restore file contents from the in-memory snapshot.
+        for path, data in backups.items():
+            try:
+                path.write_bytes(data)
+            except OSError as exc:
+                print(
+                    f"[rename_project] warning: could not restore {path}: {exc}",
+                    file=sys.stderr,
+                )
+
+        # Reverse the package directory rename if it happened.
+        if new_pkg_dir.exists() and not old_pkg_dir.exists():
+            try:
+                shutil.move(str(new_pkg_dir), str(old_pkg_dir))
+            except OSError as exc:
+                print(
+                    f"[rename_project] warning: could not restore package dir: {exc}",
+                    file=sys.stderr,
+                )
+
+        raise
 
 
 def _rename_package_dir(repl: Replacements, *, check_only: bool) -> bool:
@@ -239,16 +304,17 @@ def main(argv: list[str] | None = None) -> int:
 
     files = _gather_files()
 
-    changed_files: list[Path] = []
-    for f in files:
-        if not f.exists() or f.is_dir():
-            continue
-        if _update_file(f, repl, check_only=ns.check):
-            changed_files.append(f)
-
-    renamed_pkg = _rename_package_dir(repl, check_only=ns.check)
-
     if ns.check:
+        # Dry-run: no mutations, no need for the atomic context.
+        changed_files: list[Path] = []
+        for f in files:
+            if not f.exists() or f.is_dir():
+                continue
+            if _update_file(f, repl, check_only=True):
+                changed_files.append(f)
+
+        renamed_pkg = _rename_package_dir(repl, check_only=True)
+
         for f in changed_files:
             rel = BASHRC_PATH if f == BASHRC_PATH else f.relative_to(REPO_ROOT)
             print(f"[rename_project] would update: {rel}")
@@ -257,6 +323,21 @@ def main(argv: list[str] | None = None) -> int:
         if not changed_files and not renamed_pkg:
             print("[rename_project] no changes detected")
         return 0
+
+    # Live run: wrap all mutations in the atomic context so that any failure
+    # (including KeyboardInterrupt) triggers a full rollback.
+    old_pkg_dir = REPO_ROOT / "src" / TEMPLATE_MODULE
+    new_pkg_dir = REPO_ROOT / "src" / repl.module
+
+    changed_files = []
+    with _atomic_rename_context(files, old_pkg_dir, new_pkg_dir):
+        for f in files:
+            if not f.exists() or f.is_dir():
+                continue
+            if _update_file(f, repl, check_only=False):
+                changed_files.append(f)
+
+        renamed_pkg = _rename_package_dir(repl, check_only=False)
 
     for f in changed_files:
         if f == BASHRC_PATH:

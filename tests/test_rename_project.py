@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -11,6 +12,7 @@ from scripts.rename_project import (
     TEMPLATE_MODULE,
     TEMPLATE_PROJECT,
     Replacements,
+    _atomic_rename_context,
     _build_replacements,
     _parse_args,
     _rename_package_dir,
@@ -18,6 +20,7 @@ from scripts.rename_project import (
     _update_file,
     _validate_cli,
     _validate_identifier,
+    _write_file_atomic,
     main,
 )
 
@@ -466,3 +469,276 @@ def test_main_fails_outside_repo_root(
                 "A test project",
             ]
         )
+
+
+# ---------------------------------------------------------------------------
+# _write_file_atomic
+# ---------------------------------------------------------------------------
+
+
+def test_write_file_atomic_writes_content(tmp_path: Path) -> None:
+    target = tmp_path / "out.txt"
+    target.write_text("old", encoding="utf-8")
+
+    _write_file_atomic(target, "new content")
+
+    assert target.read_text(encoding="utf-8") == "new content"
+
+
+def test_write_file_atomic_creates_file(tmp_path: Path) -> None:
+    target = tmp_path / "brand_new.txt"
+    assert not target.exists()
+
+    _write_file_atomic(target, "hello")
+
+    assert target.read_text(encoding="utf-8") == "hello"
+
+
+def test_write_file_atomic_no_temp_file_left_on_success(tmp_path: Path) -> None:
+    target = tmp_path / "file.txt"
+
+    _write_file_atomic(target, "content")
+
+    # The only file in tmp_path should be the target itself — no orphaned temp.
+    remaining = list(tmp_path.iterdir())
+    assert remaining == [target]
+
+
+def test_write_file_atomic_cleans_up_temp_on_replace_failure(tmp_path: Path) -> None:
+    target = tmp_path / "file.txt"
+
+    with patch("os.replace", side_effect=OSError("disk full")):
+        with pytest.raises(OSError, match="disk full"):
+            _write_file_atomic(target, "content")
+
+    # No orphaned .rename_tmp_* file should remain.
+    leftovers = [p for p in tmp_path.iterdir() if p.name.startswith(".rename_tmp_")]
+    assert leftovers == []
+
+
+def test_write_file_atomic_original_unchanged_when_replace_fails(tmp_path: Path) -> None:
+    target = tmp_path / "original.txt"
+    target.write_text("original", encoding="utf-8")
+
+    with patch("os.replace", side_effect=OSError("disk full")):
+        with pytest.raises(OSError):
+            _write_file_atomic(target, "new")
+
+    assert target.read_text(encoding="utf-8") == "original"
+
+
+# ---------------------------------------------------------------------------
+# _atomic_rename_context — file-content rollback
+# ---------------------------------------------------------------------------
+
+
+def test_atomic_rename_context_no_rollback_on_success(tmp_path: Path) -> None:
+    f = tmp_path / "file.txt"
+    f.write_text("original", encoding="utf-8")
+    old_pkg = tmp_path / "old_pkg"
+    new_pkg = tmp_path / "new_pkg"
+
+    with _atomic_rename_context([f], old_pkg, new_pkg):
+        f.write_text("modified", encoding="utf-8")
+
+    # Changes must persist after a clean exit.
+    assert f.read_text(encoding="utf-8") == "modified"
+
+
+def test_atomic_rename_context_restores_files_on_exception(tmp_path: Path) -> None:
+    f1 = tmp_path / "a.txt"
+    f2 = tmp_path / "b.txt"
+    f1.write_text("aaa", encoding="utf-8")
+    f2.write_text("bbb", encoding="utf-8")
+    old_pkg = tmp_path / "old_pkg"
+    new_pkg = tmp_path / "new_pkg"
+
+    with pytest.raises(RuntimeError):
+        with _atomic_rename_context([f1, f2], old_pkg, new_pkg):
+            f1.write_text("aaa-modified", encoding="utf-8")
+            f2.write_text("bbb-modified", encoding="utf-8")
+            raise RuntimeError("simulated failure")
+
+    assert f1.read_text(encoding="utf-8") == "aaa"
+    assert f2.read_text(encoding="utf-8") == "bbb"
+
+
+def test_atomic_rename_context_restores_files_on_keyboard_interrupt(tmp_path: Path) -> None:
+    f = tmp_path / "file.txt"
+    f.write_text("original", encoding="utf-8")
+    old_pkg = tmp_path / "old_pkg"
+    new_pkg = tmp_path / "new_pkg"
+
+    with pytest.raises(KeyboardInterrupt):
+        with _atomic_rename_context([f], old_pkg, new_pkg):
+            f.write_text("modified", encoding="utf-8")
+            raise KeyboardInterrupt
+
+    assert f.read_text(encoding="utf-8") == "original"
+
+
+def test_atomic_rename_context_skips_nonexistent_files(tmp_path: Path) -> None:
+    existing = tmp_path / "exists.txt"
+    existing.write_text("keep", encoding="utf-8")
+    missing = tmp_path / "does_not_exist.txt"
+    old_pkg = tmp_path / "old_pkg"
+    new_pkg = tmp_path / "new_pkg"
+
+    # Passing a non-existent file must not raise during snapshot or rollback.
+    with pytest.raises(RuntimeError):
+        with _atomic_rename_context([existing, missing], old_pkg, new_pkg):
+            existing.write_text("changed", encoding="utf-8")
+            raise RuntimeError("fail")
+
+    assert existing.read_text(encoding="utf-8") == "keep"
+    assert not missing.exists()
+
+
+# ---------------------------------------------------------------------------
+# _atomic_rename_context — directory rollback
+# ---------------------------------------------------------------------------
+
+
+def test_atomic_rename_context_reverses_dir_rename_on_exception(tmp_path: Path) -> None:
+    old_pkg = tmp_path / "old_pkg"
+    new_pkg = tmp_path / "new_pkg"
+    old_pkg.mkdir()
+    (old_pkg / "mod.py").write_text("# code", encoding="utf-8")
+
+    with pytest.raises(RuntimeError):
+        with _atomic_rename_context([], old_pkg, new_pkg):
+            # Simulate the package directory rename that the script performs.
+            import shutil
+
+            shutil.move(str(old_pkg), str(new_pkg))
+            raise RuntimeError("failure after dir rename")
+
+    # Directory must be restored to its original name.
+    assert old_pkg.exists()
+    assert not new_pkg.exists()
+    assert (old_pkg / "mod.py").exists()
+
+
+def test_atomic_rename_context_does_not_undo_dir_if_not_moved(tmp_path: Path) -> None:
+    old_pkg = tmp_path / "old_pkg"
+    new_pkg = tmp_path / "new_pkg"
+    old_pkg.mkdir()
+
+    # Raise without ever moving the directory.
+    with pytest.raises(RuntimeError):
+        with _atomic_rename_context([], old_pkg, new_pkg):
+            raise RuntimeError("early failure")
+
+    # The original directory must still exist, new one must not.
+    assert old_pkg.exists()
+    assert not new_pkg.exists()
+
+
+def test_atomic_rename_context_dir_and_files_both_rolled_back(tmp_path: Path) -> None:
+    f = tmp_path / "config.txt"
+    f.write_text("original config", encoding="utf-8")
+    old_pkg = tmp_path / "old_pkg"
+    new_pkg = tmp_path / "new_pkg"
+    old_pkg.mkdir()
+
+    import shutil
+
+    with pytest.raises(RuntimeError):
+        with _atomic_rename_context([f], old_pkg, new_pkg):
+            f.write_text("new config", encoding="utf-8")
+            shutil.move(str(old_pkg), str(new_pkg))
+            raise RuntimeError("fail after both changes")
+
+    assert f.read_text(encoding="utf-8") == "original config"
+    assert old_pkg.exists()
+    assert not new_pkg.exists()
+
+
+# ---------------------------------------------------------------------------
+# main() — end-to-end rollback via _atomic_rename_context
+# ---------------------------------------------------------------------------
+
+
+def _main_args(tmp_repo: Path) -> list[str]:
+    return [
+        "--project-name",
+        "my-project",
+        "--module",
+        "my_project",
+        "--author",
+        "Test Author",
+        "--description",
+        "A test project",
+    ]
+
+
+def test_main_rolls_back_files_on_write_error(
+    tmp_repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("scripts.rename_project.REPO_ROOT", tmp_repo)
+    monkeypatch.chdir(tmp_repo)
+
+    original_toml = (tmp_repo / "pyproject.toml").read_text(encoding="utf-8")
+    original_readme = (tmp_repo / "README.md").read_text(encoding="utf-8")
+
+    call_count = 0
+
+    real_write_file_atomic = _write_file_atomic
+
+    def failing_write(path, content):
+        nonlocal call_count
+        call_count += 1
+        if call_count >= 2:
+            raise OSError("simulated disk full")
+        real_write_file_atomic(path, content)
+
+    monkeypatch.setattr("scripts.rename_project._write_file_atomic", failing_write)
+
+    with pytest.raises(OSError, match="simulated disk full"):
+        main(_main_args(tmp_repo))
+
+    # All files must be back to their original content.
+    assert (tmp_repo / "pyproject.toml").read_text(encoding="utf-8") == original_toml
+    assert (tmp_repo / "README.md").read_text(encoding="utf-8") == original_readme
+
+
+def test_main_rolls_back_dir_rename_on_later_error(
+    tmp_repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("scripts.rename_project.REPO_ROOT", tmp_repo)
+    monkeypatch.chdir(tmp_repo)
+
+    # Patch _write_file_atomic to succeed for all file writes, but inject a
+    # failure *after* the package directory has already been renamed.
+    real_rename_package_dir = _rename_package_dir
+
+    def rename_then_fail(repl, *, check_only):
+        real_rename_package_dir(repl, check_only=check_only)
+        raise OSError("failure after dir rename")
+
+    monkeypatch.setattr("scripts.rename_project._rename_package_dir", rename_then_fail)
+
+    with pytest.raises(OSError, match="failure after dir rename"):
+        main(_main_args(tmp_repo))
+
+    # Package directory must have been rolled back to its original name.
+    assert (tmp_repo / "src" / TEMPLATE_MODULE).exists()
+    assert not (tmp_repo / "src" / "my_project").exists()
+
+
+def test_main_successful_run_leaves_no_rollback_artifacts(
+    tmp_repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("scripts.rename_project.REPO_ROOT", tmp_repo)
+    monkeypatch.chdir(tmp_repo)
+
+    rc = main(_main_args(tmp_repo))
+
+    assert rc == 0
+    # No orphaned temp files anywhere in the repo.
+    orphans = list(tmp_repo.rglob(".rename_tmp_*"))
+    assert orphans == []
+    # Changes must be present (not accidentally rolled back).
+    content = (tmp_repo / "pyproject.toml").read_text(encoding="utf-8")
+    assert "my-project" in content
+    assert TEMPLATE_PROJECT not in content
