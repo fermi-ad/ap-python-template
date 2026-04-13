@@ -15,7 +15,7 @@ Usage (interactive, recommended):
 
 Usage (non-interactive):
   python3 scripts/rename_project.py --project-name my-proj --module my_proj \
-    --description "My project" --author "Your Name"
+    --author "Your Name" --description "My project" [--cli-name my-proj]
 
 Notes:
 - Run from the repository root.
@@ -53,7 +53,7 @@ TEMPLATE_MODULE = "ap_python_starter_kit"
 TEMPLATE_CLI = "ap-python-starter-kit"
 
 
-DEFAULT_TARGET_FILES = [
+TARGET_FILES = [
     ".devfile.yaml",
     "pyproject.toml",
     "Dockerfile",
@@ -139,12 +139,9 @@ def _rename_package_dir(repl: Replacements, *, check_only: bool) -> bool:
     return True
 
 
-def _gather_files(explicit: list[str] | None) -> list[Path]:
-    if explicit:
-        files = [REPO_ROOT / p for p in explicit]
-    else:
-        files = [REPO_ROOT / p for p in DEFAULT_TARGET_FILES]
-        files.append(BASHRC_PATH)
+def _gather_files() -> list[Path]:
+    files = [REPO_ROOT / p for p in TARGET_FILES]
+    files.append(BASHRC_PATH)
 
     # Also update any files under src/<template_module>/ and docs/optional-pyqt.md if present.
     src_template = REPO_ROOT / "src" / TEMPLATE_MODULE
@@ -178,54 +175,43 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         default=None,
         help="Console script name (kebab-case). Default: <module> with underscores -> hyphens",
     )
-    p.add_argument(
-        "--files",
-        nargs="*",
-        default=None,
-        help="Optional explicit list of files to update (relative paths).",
-    )
     p.add_argument("--check", action="store_true", help="Dry-run; print what would change")
-    p.add_argument(
-        "--non-interactive",
-        action="store_true",
-        help="Fail if required fields are missing instead of prompting",
-    )
     return p.parse_args(argv)
 
 
 def _build_replacements(ns: argparse.Namespace) -> Replacements:
-    interactive = (not ns.non_interactive) and sys.stdin.isatty()
+    any_provided = any([ns.project_name, ns.module, ns.description, ns.author, ns.cli_name])
+    interactive = (not any_provided) and sys.stdin.isatty()
 
     project_name = ns.project_name
     module = ns.module
-
-    if interactive:
-        print("[rename_project] interactive mode")
-        project_name = project_name or _prompt("Project/repo name (kebab-case)", TEMPLATE_PROJECT)
-        module = module or _prompt("Python package name (snake_case)", TEMPLATE_MODULE)
-
-    if not project_name:
-        _die("missing --project-name (or run interactively)")
-    if not module:
-        _die("missing --module (or run interactively)")
-
-    _validate_identifier(module)
-
-    default_cli = module.replace("_", "-")
 
     description = ns.description
     author = ns.author
     cli_name = ns.cli_name
 
     if interactive:
-        description = "" if description is None else description
-        author = "" if author is None else author
-        cli_name = cli_name or _prompt("CLI command name", default_cli)
+        print("[rename_project] interactive mode")
+        project_name = project_name or _prompt("Project/repo name (kebab-case)")
+        module = module or _prompt("Python package name (snake_case)")
+        author = author or _prompt("Author")
+        description = description or _prompt("Description")
 
-        if description == "":
-            description = _prompt("Description", "")
-        if author == "":
-            author = _prompt("Author", "")
+    if not project_name:
+        _die("missing --project-name")
+    if not module:
+        _die("missing --module")
+    if not author:
+        _die("missing --author")
+    if not description:
+        _die("missing --description")
+
+    _validate_identifier(module)
+
+    default_cli = module.replace("_", "-")
+
+    if interactive:
+        cli_name = cli_name or _prompt("CLI command name", default_cli)
 
     description = "" if description is None else description
     author = "" if author is None else author
@@ -249,7 +235,7 @@ def main(argv: list[str] | None = None) -> int:
     if Path.cwd().resolve() != REPO_ROOT:
         _die(f"run from repo root: {REPO_ROOT}")
 
-    files = _gather_files(ns.files)
+    files = _gather_files()
 
     changed_files: list[Path] = []
     for f in files:
