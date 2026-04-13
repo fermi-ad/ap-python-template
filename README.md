@@ -15,9 +15,16 @@ A Python-first project template. The default path is a CLI app with optional, is
    (Non-interactive usage is also supported, see [`scripts/rename_project.py`](scripts/rename_project.py).)
 
 2. Install dependencies:
-   - `uv sync`
+
+   ```bash
+   uv sync
+   ```
+
 3. Run the CLI app:
-   - `uv run my-project` (or your chosen `--cli-name`)
+
+   ```bash
+   uv run [project_name]
+   ```
 
 Detailed onboarding is in [`docs/quickstart.md`](docs/quickstart.md).
 

@@ -24,19 +24,19 @@ It comes prebuilt with all the tools for building an application with Python 3.1
 3. After the workspace starts, run the default build command (or run manually):
 
    ```bash
-   $ uv sync
+   uv sync
    ```
 
 4. Run tests:
 
    ```bash
-   $ test
+   test
    ```
 
 5. Run the CLI app:
 
    ```bash
-   $ run
+   run
    ```
 
 ## Notes
