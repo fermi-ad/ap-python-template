@@ -165,7 +165,9 @@ def _gather_files() -> list[Path]:
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
-    p = argparse.ArgumentParser(description=__doc__)
+    p = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     p.add_argument("--project-name", help="Distribution/repo name (e.g. my-project)")
     p.add_argument("--module", help="Python package name (e.g. my_project)")
     p.add_argument("--description", default=None, help="Project description")
