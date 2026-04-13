@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Verify rename script has been run
         # The template repo (fermi-ad/ap-python-template) is allowed to keep the placeholder name.
         # Any repo created from the template must run scripts/rename_project.py before pushing an image.
