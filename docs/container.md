@@ -2,8 +2,15 @@
 
 This template includes a Docker-based workflow with:
 
-- a **CLI-first** default image (smallest/safest)
-- an **opt-in GUI (Xpra HTML)** image target for running a PyQt app in-container and viewing it in a browser
+- a **CLI-first** default image for running the package launcher directly
+- an **opt-in GUI (Xpra HTML)** image target for running the integrated PyQt app in-container and viewing it in a browser
+
+## Image targets
+
+The Dockerfile currently defines these documented runtime-oriented stages:
+
+- `runtime`: the default CLI image used by [`make build`](Makefile) and [`make run`](Makefile)
+- `xpra-runtime`: the browser-served GUI image used by [`make build-gui`](Makefile) and [`make run-gui`](Makefile)
 
 ## Build (CLI)
 
@@ -13,21 +20,29 @@ make build
 
 ## Run (CLI default)
 
-Runs the CLI module entrypoint configured in [`Dockerfile`](Dockerfile):
+Runs the fixed CLI entrypoint defined by the `runtime` stage in [`Dockerfile`](Dockerfile):
 
 ```bash
 make run
 ```
 
+At the moment, the CLI container starts `python -m ap_python_starter_kit.main` directly. Although [`Makefile`](Makefile) passes an `APP_CMD` environment variable into the container, the current `runtime` entrypoint does not consume it.
+
 ## Run a custom CLI command
 
+The documented [`make run`](Makefile) path does **not** currently support overriding the CLI command via `APP_CMD`.
+
+If you need to run a different CLI command locally, use the local `uv` workflow instead:
+
 ```bash
-make run APP_CMD="python -m ap_python_starter_kit.main --name Container"
+uv run ap-python-starter-kit --mode cli --device "G:SCTIME@P,15H"
 ```
+
+If you need containerized custom CLI execution, update the `runtime` stage in [`Dockerfile`](Dockerfile) so its entrypoint evaluates `APP_CMD`.
 
 ## Build (GUI / Xpra HTML)
 
-Build the optional GUI image target (`xpra-runtime`) from [`Dockerfile`](Dockerfile:1):
+Build the optional GUI image target (`xpra-runtime`) from [`Dockerfile`](Dockerfile):
 
 ```bash
 make build-gui
@@ -35,7 +50,7 @@ make build-gui
 
 ## Run (GUI / Xpra HTML)
 
-This runs a PyQt app inside the container and serves it via Xpra's built-in HTML client.
+This runs the integrated PyQt app inside the container and serves it through Xpra's built-in HTML client. This is the documented GUI deployment path for the template.
 
 ```bash
 make run-gui
@@ -56,8 +71,10 @@ make run-gui XPRA_PORT=16000
 Custom command:
 
 ```bash
-make run-gui APP_CMD="python /app/scaffolds/pyqt/app.py"
+make run-gui APP_CMD="python -m ap_python_starter_kit.gui"
 ```
+
+For the Xpra image, `APP_CMD` is the supported way to replace the default GUI command that [`docker/start.sh`](docker/start.sh) launches.
 
 Security note:
 

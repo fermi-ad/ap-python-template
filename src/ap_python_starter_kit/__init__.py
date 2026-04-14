@@ -1,3 +1,3 @@
 """Template package for ap-python-starter-kit."""
 
-__all__ = ["main"]
+__all__ = ["acsys_client", "gui", "main"]

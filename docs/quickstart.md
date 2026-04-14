@@ -23,32 +23,44 @@ python3 scripts/rename_project.py
 uv sync
 ```
 
-## 3) Run the CLI app
+## 3) Run the app in CLI mode
 
-By default the CLI runs an ACSys demo query (prints a few readings):
+By default the launcher runs an ACSys demo query and prints a few readings:
 
 ```bash
-run
+uv run ap-python-starter-kit
 ```
 
 Override the device/request string:
 
 ```bash
-run --device "G:SCTIME@P,15H"
+uv run ap-python-starter-kit --device "G:SCTIME@P,15H"
 ```
 
-## 4) Run tests and lint
+Select the mode explicitly:
 
 ```bash
-test
-lint
+uv run ap-python-starter-kit --mode cli
 ```
 
-## 5) Optional: enable PyQt scaffold
+## 4) Optional: enable the integrated PyQt GUI
 
-The PyQt scaffold also shows a live ACSys reading (defaults to `G:SCTIME@P,15H`).
+The GUI uses the same shared ACSys client layer and shows a live ACSys reading.
 
 ```bash
 uv sync --extra gui-pyqt
-uv run python scaffolds/pyqt/app.py
+uv run ap-python-starter-kit --mode gui
+```
+
+Or launch the dedicated GUI script:
+
+```bash
+uv run ap-python-starter-kit-gui
+```
+
+## 5) Run tests and lint
+
+```bash
+uv run pytest
+uv run ruff check .
 ```
