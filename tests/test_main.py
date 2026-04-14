@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
+from collections.abc import Sequence
+from types import ModuleType, SimpleNamespace
 
 import pytest
 
@@ -21,7 +22,9 @@ def test_build_parser_accepts_mode_flag() -> None:
     assert args.device == "Z:TEST@I"
 
 
-def test_run_cli_prints_readings(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+def test_run_cli_prints_readings(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
     monkeypatch.setattr(main, "read_device", lambda device: [f"{device}-1", f"{device}-2"])
 
     result = main.run_cli("Z:TEST@I")
@@ -57,7 +60,11 @@ def test_main_dispatches_to_cli(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_gui_main_uses_default_device(monkeypatch: pytest.MonkeyPatch) -> None:
     devices: list[str] = []
-    monkeypatch.setattr(gui, "run_gui", lambda device=gui.DEFAULT_DEVICE: devices.append(device) or 0)
+    monkeypatch.setattr(
+        gui,
+        "run_gui",
+        lambda device=gui.DEFAULT_DEVICE: devices.append(device) or 0,
+    )
 
     assert gui.main() == 0
     assert devices == [gui.DEFAULT_DEVICE]
@@ -66,7 +73,13 @@ def test_gui_main_uses_default_device(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_gui_main_raises_helpful_error_when_pyqt_missing(monkeypatch: pytest.MonkeyPatch) -> None:
     original_import = __import__
 
-    def fake_import(name: str, globals=None, locals=None, fromlist=(), level: int = 0):
+    def fake_import(
+        name: str,
+        globals: dict[str, object] | None = None,
+        locals: dict[str, object] | None = None,
+        fromlist: Sequence[str] = (),
+        level: int = 0,
+    ) -> ModuleType:
         if name.startswith("PyQt6"):
             raise ImportError("missing PyQt6")
         return original_import(name, globals, locals, fromlist, level)

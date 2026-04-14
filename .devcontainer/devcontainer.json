@@ -24,5 +24,5 @@
 			}
 		}
 	},
-	"postCreateCommand": "uv sync && uv run pre-commit install"
+	"postCreateCommand": "uv sync --dev --all-extras && uv run pre-commit install"
 }
