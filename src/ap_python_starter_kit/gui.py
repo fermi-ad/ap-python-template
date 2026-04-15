@@ -6,8 +6,6 @@ import threading
 
 from .acsys_client import stream_device
 
-DEFAULT_DEVICE = "G:SCTIME@P,15H"
-
 
 class MainWindow:
     def __init__(self, device: str) -> None:
@@ -41,7 +39,7 @@ class MainWindow:
         return getattr(self._window, name)
 
 
-def run_gui(device: str = DEFAULT_DEVICE) -> int:
+def run_gui(device: str) -> int:
     try:
         from PyQt6.QtCore import QTimer
         from PyQt6.QtWidgets import QApplication
