@@ -19,7 +19,6 @@ gui-pyqt = ["PyQt6~=6.10"]
 
 [project.scripts]
 ap-python-starter-kit = "ap_python_starter_kit.main:main"
-ap-python-starter-kit-gui = "ap_python_starter_kit.gui:main"
 
 [dependency-groups]
 dev = [

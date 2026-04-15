@@ -35,8 +35,14 @@ class MainWindow:
 
         self._window = _Window()
 
-    def __getattr__(self, name: str) -> object:
-        return getattr(self._window, name)
+    def resize(self, width: int, height: int) -> None:
+        self._window.resize(width, height)
+
+    def show(self) -> None:
+        self._window.show()
+
+    def update_text(self, text: str) -> None:
+        self._window.update_text(text)
 
 
 def run_gui(device: str) -> int:
@@ -90,11 +96,3 @@ def _queue_update(text: str, updates: queue.Queue[str], stop: threading.Event) -
         return True
     updates.put(text)
     return False
-
-
-def main() -> int:
-    return run_gui()
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

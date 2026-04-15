@@ -12,13 +12,13 @@ def test_build_parser_accepts_device_flag() -> None:
     parser = main.build_parser()
     args = parser.parse_args(["--device", "G:SCTIME@P,15H"])
     assert args.device == "G:SCTIME@P,15H"
-    assert args.mode == "cli"
+    assert args.gui is False
 
 
-def test_build_parser_accepts_mode_flag() -> None:
+def test_build_parser_accepts_gui_flag() -> None:
     parser = main.build_parser()
-    args = parser.parse_args(["--mode", "gui", "--device", "Z:TEST@I"])
-    assert args.mode == "gui"
+    args = parser.parse_args(["--gui", "--device", "Z:TEST@I"])
+    assert args.gui is True
     assert args.device == "Z:TEST@I"
 
 
@@ -35,7 +35,7 @@ def test_run_cli_prints_readings(
 
 
 def test_main_dispatches_to_gui(monkeypatch: pytest.MonkeyPatch) -> None:
-    parser = SimpleNamespace(parse_args=lambda: SimpleNamespace(mode="gui", device="G:GUI@I"))
+    parser = SimpleNamespace(parse_args=lambda: SimpleNamespace(gui=True, device="G:GUI@I"))
     monkeypatch.setattr(main, "build_parser", lambda: parser)
 
     calls: list[str] = []
@@ -51,23 +51,11 @@ def test_main_dispatches_to_gui(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_main_dispatches_to_cli(monkeypatch: pytest.MonkeyPatch) -> None:
-    parser = SimpleNamespace(parse_args=lambda: SimpleNamespace(mode="cli", device="G:CLI@I"))
+    parser = SimpleNamespace(parse_args=lambda: SimpleNamespace(gui=False, device="G:CLI@I"))
     monkeypatch.setattr(main, "build_parser", lambda: parser)
     monkeypatch.setattr(main, "run_cli", lambda device: 23 if device == "G:CLI@I" else 1)
 
     assert main.main() == 23
-
-
-def test_gui_main_uses_default_device(monkeypatch: pytest.MonkeyPatch) -> None:
-    devices: list[str] = []
-    monkeypatch.setattr(
-        gui,
-        "run_gui",
-        lambda device=gui.DEFAULT_DEVICE: devices.append(device) or 0,
-    )
-
-    assert gui.main() == 0
-    assert devices == [gui.DEFAULT_DEVICE]
 
 
 def test_gui_main_raises_helpful_error_when_pyqt_missing(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -87,4 +75,4 @@ def test_gui_main_raises_helpful_error_when_pyqt_missing(monkeypatch: pytest.Mon
     monkeypatch.setattr("builtins.__import__", fake_import)
 
     with pytest.raises(RuntimeError, match="uv sync --extra gui-pyqt"):
-        gui.run_gui()
+        gui.run_gui(main.DEFAULT_DEVICE)

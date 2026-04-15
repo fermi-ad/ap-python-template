@@ -13,10 +13,9 @@ def build_parser() -> argparse.ArgumentParser:
         description="Application entry point for ap-python-starter-kit.",
     )
     parser.add_argument(
-        "--mode",
-        choices=("cli", "gui"),
-        default="cli",
-        help="Application mode to launch. Defaults to the CLI demo.",
+        "--gui",
+        action="store_true",
+        help="Launch the GUI instead of the default CLI demo.",
     )
     parser.add_argument(
         "--device",
@@ -36,7 +35,7 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
 
-    if args.mode == "gui":
+    if args.gui:
         from .gui import run_gui
 
         return run_gui(args.device)

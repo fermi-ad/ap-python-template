@@ -174,8 +174,8 @@ ENV PATH="/usr/local/.venv/bin:${PATH}"
 ENV XPRA_HTML=on
 EXPOSE 14500
 
-# Default to integrated package GUI in Xpra deployment
-ENV APP_CMD="python -m ap_python_starter_kit.gui"
+# Default to integrated package GUI in Xpra deployment via the main entrypoint
+ENV APP_CMD="python -m ap_python_starter_kit.main --gui"
 
 # Health check to verify Xpra server is responsive
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
