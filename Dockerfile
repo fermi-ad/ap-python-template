@@ -1,44 +1,72 @@
 # AlmaLinux base for consistency with ACSys/Xpra images.
 
-FROM almalinux/9-base AS base
+# ============================================================================
+# Build arguments for version management
+# Override at build time with: docker build --build-arg PYTHON_VERSION=3.13
+# ============================================================================
+ARG ALMALINUX_VERSION=9-base
+ARG PYTHON_VERSION=3.12
+ARG PYQT_VERSION="PyQt6~=6.10"
+
+# ============================================================================
+# Base stage: Minimal runtime dependencies
+# Shared by all deployment variants (CLI, GUI, Xpra)
+# ============================================================================
+FROM almalinux/${ALMALINUX_VERSION} AS base
+
+# Re-declare args for use in this stage
+ARG PYTHON_VERSION
 
 USER root
 
-RUN dnf install -y krb5-libs shadow-utils python3.12 python3.12-devel git \
- && dnf clean all
+# Install system dependencies and create non-root user
+# Combined into single layer to reduce image size
+RUN dnf install -y \
+      krb5-libs \
+      krb5-workstation \
+      shadow-utils \
+      python${PYTHON_VERSION} \
+      python${PYTHON_VERSION}-devel \
+      git \
+      ca-certificates \
+ && dnf clean all \
+ && groupadd -g 1000 pygroup \
+ && useradd -m -u 1000 -g pygroup pyuser
 
-# uv expects a few basics during sync/install
-RUN dnf install -y ca-certificates \
- && dnf clean all
+COPY --chmod=644 .kerberos/krb5.conf /etc/krb5.conf
 
-# Match OpenShift/K8s-friendly non-root runtime user.
-RUN groupadd -g 1000 pygroup && useradd -m -u 1000 -g pygroup pyuser
-
+# ============================================================================
+# Builder stage: Compile dependencies and build Python venv
+# ============================================================================
 FROM base AS builder
 WORKDIR /install
 
+# Install build tools needed for compiling Python packages
 RUN dnf install -y gcc gcc-c++ make krb5-devel \
  && dnf clean all
 
+# Install uv (fast Python package manager) from astral.sh
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:${PATH}"
 
-# Editable builds require project sources (and README referenced by pyproject).
-COPY pyproject.toml ./
-COPY README.md ./
+COPY pyproject.toml README.md ./
 COPY src ./src
-COPY scaffolds ./scaffolds
 
-# Build a venv in /usr/local for simple runtime PATH.
-# Install the package into the venv (non-editable) so runtime doesn't depend on source paths.
 RUN uv venv /usr/local/.venv \
  && uv pip install --python /usr/local/.venv/bin/python --no-cache-dir .
 
+# ============================================================================
+# Runtime stage: Minimal CLI deployment target
+# Runs the template package entrypoint
+# ============================================================================
 FROM base AS runtime
 
+# OCI labels for better metadata and discoverability
+LABEL org.opencontainers.image.source="https://github.com/fermi-ad/ap-python-template"
+LABEL org.opencontainers.image.description="Python application template (CLI runtime)"
+LABEL org.opencontainers.image.title="ap-python-template-cli"
+
 COPY --from=builder /usr/local /usr/local
-# Include runtime sources needed for the optional GUI scaffold.
-COPY scaffolds /app/scaffolds
 
 WORKDIR /app
 
@@ -48,51 +76,17 @@ ENV PATH="/usr/local/.venv/bin:${PATH}"
 ENV APP_CMD="python -m ap_python_starter_kit.main"
 
 # Default (CLI) container just runs the app command.
-ENTRYPOINT ["/bin/bash","-lc","${APP_CMD}"]
+ENTRYPOINT ["/bin/bash", "-lc", "python -m ap_python_starter_kit.main"]
 
-# Optional GUI runtime target for host X server usage.
-FROM runtime AS runtime-gui
-
-# runtime switches to non-root (pyuser) in the `runtime` stage.
-# Switch back to root temporarily to install OS packages.
-USER root
-
-# Install GUI runtime libs + PyQt.
-RUN dnf install -y \
-      libxcb \
-      libxkbcommon \
-      libxkbcommon-x11 \
-      xcb-util \
-      xcb-util-image \
-      xcb-util-keysyms \
-      xcb-util-renderutil \
-      xcb-util-wm \
-      xcb-util-cursor \
-      mesa-libGL \
-      mesa-libEGL \
-      dbus-libs \
-      fontconfig \
- && dnf clean all
-
-# Install uv into the runtime-gui layer (the base runtime image intentionally doesn't include it).
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.local/bin:${PATH}"
-
-# Keep running as root for the optional dependency install so `uv` (in /root/.local/bin)
-# is available on PATH; then drop back to non-root for runtime execution.
-RUN uv pip install --python /usr/local/.venv/bin/python --no-cache-dir "PyQt6>=6.7"
-
-USER pyuser:pygroup
-
-ENV APP_CMD="python /app/scaffolds/pyqt/app.py"
-
-# ---------------------------
-# Optional deployment target: AlmaLinux + Xpra HTML
-# ---------------------------
+# ============================================================================
+# Xpra-base stage: Adds Xpra server for web-based GUI access
+# Base for xpra-runtime deployment with HTML5 client
+# ============================================================================
 FROM base AS xpra-base
 
 USER root
 
+# Enable EPEL and Xpra repositories, then install Xpra server
 RUN dnf install -y \
       'dnf-command(config-manager)' \
  && dnf config-manager --set-enabled crb \
@@ -103,7 +97,10 @@ RUN dnf install -y \
  && dnf install -y xpra \
  && dnf clean all
 
-# (python is already present from `base`)
+# Install curl for start.sh readiness checks and healthchecks
+RUN dnf install -y --allowerasing curl && dnf clean all
+
+# Install GUI runtime libraries (python already present from `base`)
 RUN dnf install -y \
       libxcb \
       libxkbcommon \
@@ -115,54 +112,74 @@ RUN dnf install -y \
       xcb-util-wm \
       xcb-util-cursor
 
+# Install D-Bus and configure machine ID for Xpra
 RUN dnf install -y dbus && dnf clean all
 RUN rm -f /etc/machine-id && dbus-uuidgen --ensure=/etc/machine-id
 
-# user already created in `base`
+# Create runtime directories for Xpra with proper permissions
+# User already created in `base` stage
 RUN mkdir -p /run/user/1000 /tmp/runtime-pyuser /tmp/.X11-unix /run/xpra \
  && chown -R pyuser:pygroup /run/user/1000 /tmp/runtime-pyuser /run/xpra \
  && chmod 700 /run/user/1000 /tmp/runtime-pyuser /run/xpra \
  && chmod 1777 /tmp/.X11-unix
 
+# ============================================================================
+# Xpra-builder stage: Build Python venv with PyQt for Xpra deployment
+# ============================================================================
 FROM xpra-base AS xpra-builder
+
+# Re-declare args for use in this stage
+ARG PYQT_VERSION
+
 WORKDIR /install
 
+# Install build tools needed for compiling Python packages
 RUN dnf install -y gcc gcc-c++ make krb5-devel && dnf clean all
 
-# Editable builds require project sources (and README referenced by pyproject).
-COPY pyproject.toml ./
-COPY README.md ./
-COPY src ./src
-COPY scaffolds ./scaffolds
-
+# Install uv (fast Python package manager) from astral.sh
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:${PATH}"
 
-# Create venv in /usr/local to simplify runtime PATH.
-# Install the package into the venv (non-editable) so runtime doesn't depend on source paths.
+COPY pyproject.toml README.md ./
+COPY src ./src
+
 RUN uv venv /usr/local/.venv \
  && uv pip install --python /usr/local/.venv/bin/python --no-cache-dir . \
- && uv pip install --python /usr/local/.venv/bin/python --no-cache-dir "PyQt6>=6.7"
+ && uv pip install --python /usr/local/.venv/bin/python --no-cache-dir "${PYQT_VERSION}"
 
+# ============================================================================
+# Xpra-runtime stage: Web-based GUI deployment via Xpra HTML5 client
+# Exposes GUI on port 14500, accessible via web browser
+# ============================================================================
 FROM xpra-base AS xpra-runtime
 
+# OCI labels for better metadata and discoverability
+LABEL org.opencontainers.image.source="https://github.com/fermi-ad/ap-python-template"
+LABEL org.opencontainers.image.description="Python application template (Xpra GUI runtime)"
+LABEL org.opencontainers.image.title="ap-python-template-xpra"
+
 COPY --from=xpra-builder /usr/local /usr/local
-COPY src /app/src
-COPY scaffolds /app/scaffolds
 COPY docker/start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
 WORKDIR /app
 
+# Switch to non-root user for runtime security
 USER pyuser:pygroup
 
+# Add venv to PATH for Python package access
 ENV PATH="/usr/local/.venv/bin:${PATH}"
 
-# Xpra HTML on :14500.
+# Enable Xpra HTML5 client for web browser access
 ENV XPRA_HTML=on
 EXPOSE 14500
 
-# Default to PyQt scaffold in Xpra image.
-ENV APP_CMD="python /app/scaffolds/pyqt/app.py"
+# Default to integrated package GUI in Xpra deployment via the main entrypoint
+ENV APP_CMD="python -m ap_python_starter_kit.main --gui"
 
+# Health check to verify Xpra server is responsive
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:14500/ || exit 1
+
+# Start Xpra server with configured application
 ENTRYPOINT ["/usr/local/bin/start.sh"]

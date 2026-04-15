@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Never
 from unittest.mock import patch
 
 import pytest
@@ -685,7 +686,7 @@ def test_main_rolls_back_files_on_write_error(
 
     real_write_file_atomic = _write_file_atomic
 
-    def failing_write(path, content):
+    def failing_write(path: Path, content: str) -> None:
         nonlocal call_count
         call_count += 1
         if call_count >= 2:
@@ -712,7 +713,7 @@ def test_main_rolls_back_dir_rename_on_later_error(
     # failure *after* the package directory has already been renamed.
     real_rename_package_dir = _rename_package_dir
 
-    def rename_then_fail(repl, *, check_only):
+    def rename_then_fail(repl: Replacements, *, check_only: bool) -> Never:
         real_rename_package_dir(repl, check_only=check_only)
         raise OSError("failure after dir rename")
 

@@ -2,6 +2,9 @@
 requires = ["hatchling>=1.25.0"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/ap_python_starter_kit"]
+
 [project]
 name = "ap-python-starter-kit"
 version = "0.1.0"
@@ -9,14 +12,13 @@ description = "Python starter kit"
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [{ name = "Template Maintainers" }]
-# ACSys python bindings (pulled via uv git source below)
 dependencies = ["acsys", "acsys[settings]"]
-
-[project.scripts]
-ap-python-starter-kit = "ap_python_starter_kit.main:main"
 
 [project.optional-dependencies]
 gui-pyqt = ["PyQt6~=6.10"]
+
+[project.scripts]
+ap-python-starter-kit = "ap_python_starter_kit.main:main"
 
 [dependency-groups]
 dev = [
@@ -34,9 +36,28 @@ acsys = { git = "https://github.com/fermi-ad/acsys-python", rev = "v0.12.9" }
 pythonpath = ["src"]
 addopts = "-q"
 
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+include = ["src", "tests"]
+
+[[tool.pyright.executionEnvironments]]
+root = "src"
+extraPaths = ["src"]
+
+[[tool.pyright.executionEnvironments]]
+root = "tests"
+extraPaths = ["src"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"
 
+[tool.ruff.format]
+line-ending = "lf"
+
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP"]
+select = ["E", "F", "I", "UP", "ANN"]
+
+[tool.ruff.lint.flake8-annotations]
+allow-star-arg-any = true
