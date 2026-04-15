@@ -37,11 +37,7 @@ Override the device/request string:
 uv run ap-python-starter-kit --device "G:SCTIME@P,15H"
 ```
 
-Select the mode explicitly:
-
-```bash
-uv run ap-python-starter-kit --mode cli
-```
+The default launcher behavior is the CLI path, so no additional mode flag is required.
 
 ## 4) Optional: enable the integrated PyQt GUI
 
@@ -49,14 +45,10 @@ The GUI uses the same shared ACSys client layer and shows a live ACSys reading.
 
 ```bash
 uv sync --extra gui-pyqt
-uv run ap-python-starter-kit --mode gui
+uv run ap-python-starter-kit --gui
 ```
 
-Or launch the dedicated GUI script:
-
-```bash
-uv run ap-python-starter-kit-gui
-```
+You can combine `--gui` with `--device` to point the GUI at a different ACSys device/request string.
 
 ## 5) Run tests and lint
 

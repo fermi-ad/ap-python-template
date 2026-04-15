@@ -2,7 +2,7 @@
 
 Python starter kit
 
-A Python-first project template with one installable application package that supports a default CLI mode and optional PyQt GUI mode, plus built-in Kerberos-aware container support for `FNAL.GOV` environments.
+A Python-first project template with one installable application package that provides a default CLI experience and an optional PyQt GUI activated through the same launcher, plus built-in Kerberos-aware container support for `FNAL.GOV` environments.
 
 ## Quickstart
 
@@ -26,11 +26,11 @@ A Python-first project template with one installable application package that su
    uv run ap-python-starter-kit
    ```
 
-5. Optionally install GUI support and run the integrated GUI:
+5. Optionally install GUI support and run the integrated GUI through the main launcher:
 
    ```bash
    uv sync --extra gui-pyqt
-   uv run ap-python-starter-kit-gui
+   uv run ap-python-starter-kit --gui
    ```
 
 Detailed onboarding is in [`docs/quickstart.md`](docs/quickstart.md).
@@ -47,12 +47,19 @@ Docs: [`docs/devpod.md`](docs/devpod.md).
 
 ```text
 .
-├── .devcontainer/
-├── .github/workflows/
+├── .devcontainer/devcontainer.json
+├── .github/workflows/ci-cd.yaml
 ├── .kerberos/krb5.conf
 ├── docker/start.sh
 ├── docs/
+│   ├── container.md
+│   ├── devpod.md
+│   └── quickstart.md
+├── scripts/rename_project.py
 ├── src/ap_python_starter_kit/
+│   ├── acsys_client.py
+│   ├── gui.py
+│   └── main.py
 ├── tests/
 ├── Dockerfile
 ├── Makefile
@@ -62,29 +69,29 @@ Docs: [`docs/devpod.md`](docs/devpod.md).
 
 ## Application Modes
 
-The template ships as one installable package under [`src/ap_python_starter_kit/`](src/ap_python_starter_kit/).
+The template ships as one installable package under [`src/ap_python_starter_kit/`](src/ap_python_starter_kit/) with a single console script, [`ap-python-starter-kit`](pyproject.toml:21).
 
-- [`ap_python_starter_kit.main`](src/ap_python_starter_kit/main.py) provides the top-level launcher and defaults to CLI mode.
-- [`ap_python_starter_kit.gui`](src/ap_python_starter_kit/gui.py) provides an optional PyQt GUI entrypoint.
-- [`ap_python_starter_kit.acsys_client`](src/ap_python_starter_kit/acsys_client.py) contains shared ACSys helpers used by both modes.
+- [`ap_python_starter_kit.main`](src/ap_python_starter_kit/main.py) provides the top-level launcher.
+- [`ap_python_starter_kit.gui`](src/ap_python_starter_kit/gui.py) provides the optional PyQt GUI implementation invoked by the launcher when `--gui` is supplied.
+- [`ap_python_starter_kit.acsys_client`](src/ap_python_starter_kit/acsys_client.py) contains shared ACSys helpers used by both CLI and GUI paths.
 
-Run the CLI mode explicitly:
+Run the default CLI behavior:
 
 ```bash
-uv run ap-python-starter-kit --mode cli --device "G:SCTIME@P,15H"
+uv run ap-python-starter-kit
 ```
 
-Run the GUI mode through the main launcher after installing the optional GUI extra:
+Run the CLI with an explicit device/request string:
+
+```bash
+uv run ap-python-starter-kit --device "G:SCTIME@P,15H"
+```
+
+Run the GUI through the same launcher after installing the optional GUI extra:
 
 ```bash
 uv sync --extra gui-pyqt
-uv run ap-python-starter-kit --mode gui
-```
-
-Or use the dedicated GUI script:
-
-```bash
-uv run ap-python-starter-kit-gui
+uv run ap-python-starter-kit --gui --device "G:SCTIME@P,15H"
 ```
 
 ## Deployment Container
@@ -122,7 +129,7 @@ The included GUI is intentionally minimal and demonstrative so downstream projec
 
 This template comes preconfigured for Continuous Integration and Continuous Delivery. When opening a pull request, your code will automatically be checked for formatting errors and common coding pitfalls, verified to compile, and all tests will be run. A report of how much of the executable code is covered by the tests will be added to your pull request as well. The [`ci-cd.yaml`](.github/workflows/ci-cd.yaml) file contains values in the `env` section that you can configure to adjust the automated build slightly.
 
-Upon merging changes in to the `main` branch, your application will be built and packaged into a container. By default, the container will attempt to provide the integrated PyQt GUI experience through the package entrypoints, so your application's GUI can be launched from Kubernetes. If your application is intended as a headless service, or works better from the command line, update the `IMAGE_VARIANT` variable in the `ci-cd.yaml` file to be `cli` instead of the default `gui-xpra`.
+Upon merging changes in to the `main` branch, your application will be built and packaged into a container. The default deployment behavior is controlled by [`IMAGE_VARIANT`](.github/workflows/ci-cd.yaml:20) in [`.github/workflows/ci-cd.yaml`](.github/workflows/ci-cd.yaml). It is currently set to `gui-xpra`, which builds the browser-served GUI variant by default. If your application is intended as a headless service, or works better from the command line, change [`IMAGE_VARIANT`](.github/workflows/ci-cd.yaml:20) to `cli`.
 
 Once the container is built, it will be pushed into `adregistry.fnal.gov` ("Harbor") so it can be deployed into the Kubernetes environment. To reiterate: **this will happen on every commit to the `main` branch.** If you do not want a new container being generated every time you make a change (e.g., if you're in the middle of implementing a new feature and want to do it in stages), the recommended approach is to create a "feature" branch that tracks your pending updates. Starting on `main`, the process would look something like this:
 
