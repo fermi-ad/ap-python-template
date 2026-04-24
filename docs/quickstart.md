@@ -37,7 +37,7 @@ Override the device/request string:
 uv run ap-python-starter-kit --device "G:SCTIME@P,15H"
 ```
 
-The default launcher behavior is the CLI path, so no additional mode flag is required.
+The default launcher behavior is the CLI path.
 
 ## 4) Optional: enable the integrated PyQt GUI
 

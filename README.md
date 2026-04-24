@@ -43,30 +43,6 @@ Read more about DevPod [here](https://devpod.sh/docs/what-is-devpod)
 
 Docs: [`docs/devpod.md`](docs/devpod.md).
 
-## Project Layout
-
-```text
-.
-├── .devcontainer/devcontainer.json
-├── .github/workflows/ci-cd.yaml
-├── .kerberos/krb5.conf
-├── docker/start.sh
-├── docs/
-│   ├── container.md
-│   ├── devpod.md
-│   └── quickstart.md
-├── scripts/rename_project.py
-├── src/ap_python_starter_kit/
-│   ├── acsys_client.py
-│   ├── gui.py
-│   └── main.py
-├── tests/
-├── Dockerfile
-├── Makefile
-├── pyproject.toml
-└── README.md
-```
-
 ## Application Modes
 
 The template ships as one installable package under [`src/ap_python_starter_kit/`](src/ap_python_starter_kit/) with a single console script, [`ap-python-starter-kit`](pyproject.toml:21).
