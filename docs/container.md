@@ -35,7 +35,7 @@ The documented [`make run`](Makefile) path does **not** currently support overri
 If you need to run a different CLI command locally, use the local `uv` workflow instead:
 
 ```bash
-uv run ap-python-starter-kit --mode cli --device "G:SCTIME@P,15H"
+uv run ap-python-starter-kit --device "G:SCTIME@P,15H"
 ```
 
 If you need containerized custom CLI execution, update the `runtime` stage in [`Dockerfile`](Dockerfile) so its entrypoint evaluates `APP_CMD`.
@@ -74,7 +74,7 @@ Custom command:
 make run-gui APP_CMD="python -m ap_python_starter_kit.gui"
 ```
 
-For the Xpra image, `APP_CMD` is the supported way to replace the default GUI command that [`docker/start.sh`](docker/start.sh) launches.
+For the Xpra image, `APP_CMD` is the supported way to replace the default GUI command that [`docker/start.sh`](docker/start.sh) launches. This override support is specific to the Xpra path and does not apply to the CLI [`runtime`](Dockerfile:62) stage.
 
 Security note:
 
