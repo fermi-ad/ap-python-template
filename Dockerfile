@@ -171,7 +171,7 @@ USER pyuser:pygroup
 ENV PATH="/usr/local/.venv/bin:${PATH}"
 
 # Enable Xpra HTML5 client for web browser access
-ENV XPRA_HTML=on
+ENV XPRA_HTML=on XCURSOR_SIZE=24
 EXPOSE 14500
 
 # Default to integrated package GUI in Xpra deployment via the main entrypoint
