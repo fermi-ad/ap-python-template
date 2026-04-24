@@ -47,16 +47,18 @@ xpra start "${XPRA_DISPLAY}" \
   --daemon=no \
   --exit-with-children=yes \
   --exit-with-windows=yes \
-  --exit-with-client=yes \
   --server-idle-timeout=300 \
   --start-child="/bin/bash -lc '${APP_CMD} >>\"${APP_LOG_FILE}\" 2>&1'" \
-  --pulseaudio=no \
   --notifications=no \
   --bell=no \
   --xsettings=no \
   --mdns=no \
   --dbus-launch=no \
   --dbus-control=no \
+  --lock=yes \
+  --sharing=no \
+  --start-new-commands=no \
+  --shell=no \
   >>"${XPRA_LOG_FILE}" 2>&1 &
 
 READY_HOST="127.0.0.1"
