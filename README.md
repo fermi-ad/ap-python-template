@@ -41,7 +41,7 @@ This repo includes a Dev Container descriptor file at [`.devcontainer/devcontain
 
 Read more about DevPod [here](https://devpod.sh/docs/what-is-devpod)
 
-Docs: [`docs/devpod.md`](docs/devpod.md).
+Full instructions: [`docs/devpod.md`](docs/devpod.md).
 
 ## Application Modes
 
