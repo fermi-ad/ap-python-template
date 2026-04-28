@@ -19,7 +19,7 @@ The workspace uses the external image referenced there, which is expected to pro
 
 ### Setup
 
-1. Ensure [VS Code is set up](#vs-code)
+1. Ensure [VS Code is set up](#vs-code). This includes installing some necessary extensions, listed in the instructions.
 2. Prepare your machine 
     - [Mac](#mac)
     - [Windows](#windows)
@@ -63,6 +63,7 @@ Mac users will require Docker to be installed. While Windows users can leverage 
 3. During DevPod setup, follow the instructions for using Docker as your provider. Colima will be substituted by DevPod automatically.
 
 #### Windows
+
 If your local machine is running Windows, you will need to have Windows Subsystem for Linux installed, with Docker or some other pod management system installed there. Here are the steps to accomplish this:
 
 1. Run the following in a terminal with administrator rights (you may be asked to restart your machine)
