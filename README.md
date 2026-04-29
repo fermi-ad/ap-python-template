@@ -8,30 +8,15 @@ A Python-first project template with one installable application package that pr
 
 1. **Do not** clone this repo! Instead, click "**Use this template**" at the top right of its GitHub page, then click "**Create a new repository**" and complete the form to create a new repo using this template.
 
-2. Rename the template to make it your own project:
+2. [Set up your development environment](docs/devpod.md)
+
+3. Rename the template to make it your own project:
 
    ```bash
    python3 scripts/rename_project.py
    ```
 
-3. Install dependencies:
-
-   ```bash
-   uv sync
-   ```
-
-4. Run the app in CLI mode:
-
-   ```bash
-   uv run ap-python-starter-kit
-   ```
-
-5. Optionally install GUI support and run the integrated GUI through the main launcher:
-
-   ```bash
-   uv sync --extra gui-pyqt
-   uv run ap-python-starter-kit --gui
-   ```
+4. Code away!
 
 Detailed onboarding is in [`docs/quickstart.md`](docs/quickstart.md).
 
@@ -41,7 +26,7 @@ This repo includes a Dev Container descriptor file at [`.devcontainer/devcontain
 
 Read more about DevPod [here](https://devpod.sh/docs/what-is-devpod)
 
-Docs: [`docs/devpod.md`](docs/devpod.md).
+Full instructions: [`docs/devpod.md`](docs/devpod.md).
 
 ## Application Modes
 

@@ -1,6 +1,12 @@
 {
 	"name": "ap-python",
 	"image": "adregistry.fnal.gov/dev-containers/ap-python:latest",
+	"features": {
+		"ghcr.io/devcontainers/features/desktop-lite:1": {
+			"password": "",
+			"webPort": 6080
+		}
+	},
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -24,5 +30,5 @@
 			}
 		}
 	},
-	"postCreateCommand": "uv sync --dev --all-extras && uv run pre-commit install"
+	"postStartCommand": "uv sync --dev --all-extras && uv run pre-commit install"
 }
