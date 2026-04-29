@@ -41,6 +41,12 @@ The workspace uses the external image referenced there, which is expected to pro
     ```bash
     uv run ap-python-starter-kit
     ```
+11. (Optional) Run the GUI
+    1. [Set up access to the container's desktop](#ui-development-after-setup-is-complete)
+    2. Run 
+        ```bash
+        uv run ap-python-starter-kit --gui
+        ```
 
 ### Prerequisites
 
@@ -133,6 +139,20 @@ If your local machine is running Windows, you will need to have Windows Subsyste
     ```bash
     sudo systemctl daemon-reload && sudo systemctl restart docker.service
     ```
+
+### UI development (After setup is complete)
+
+While building your app, you'll probably want to test out changes to the UI before deploying. In the container, this requires one preliminary step. 
+
+The development container comes with a minimal desktop overlay, in which your app will run when you kick it off. To see it, do the following:
+
+1. In VS Code, go to the "Ports" tab of the bottom panel (toggle the panel with the appropriate button in the very top-right if it is not already visible)
+2. Click the "Forward a Port" button
+3. Type `6080` and hit Enter
+4. If it doesn't open automatically, go to your web browser and navigate to `localhost:6080`
+5. Click "Connect"
+
+You're all set! Now when you run the app locally, it will come up in your web browser at `localhost:6080`. 
 
 ## Notes
 

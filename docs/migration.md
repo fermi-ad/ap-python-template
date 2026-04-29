@@ -29,45 +29,15 @@ Make it match the package name you use in your source project.
 
 Migration steps are as follows:
 
-1. Copy the contents of your `requirements.txt` file to your clipboard
-2. Locate the `[project]` section of the `pyproject.toml`, and paste the `requirements.txt` contents into the `dependencies` array.
-    Modify the dependency entries so they are comma-delimited and each is surrounded by quotes.
-
-    Example:
-    
-    `requirements.txt`
-    ```txt
-    numpy>=1.19.0
-    pandas>=2.0.0
-    matplotlib>=3.3.0
-    ...
-    ```
-    becomes
-    
-    `pyproject.toml`
-    ```toml
-    ...
-    [project]
-    ...
-    dependencies = [
-        "acsys", 
-        "acsys[settings]",
-        "numpy>=1.19.0",
-        "pandas>=2.0.0",
-        "matplotlib>=3.3.0",
-        ...
-    ]
-    ...
-    ```
-3. Refresh the `uv.lock` file by running `uv sync` in the command line
-4. Rebuild the virtual environment by running `uv venv --clear` in the command line (this may take a minute to complete)
+1. In the command line, run `uv add -r src/<your_package_name>/requirements.txt`
+2. Rebuild the virtual environment by running `uv venv --clear` in the command line (this may take a minute to complete)
     - Be sure to run `source .venv/bin/activate` once the virtual environment has been rebuilt
     - Also run `uv run pre-commit install` to ensure the Git pre-commit hooks work correctly
-5. (optional) You can delete your `requirements.txt`. All dependencies should now be handled via the `pyproject.toml` file. Use `uv add` and `uv remove` to update your dependencies from the command line, or edit the `dependencies` section of `pyproject.toml` directly.
+3. (optional) You can delete your `requirements.txt`. All dependencies should now be handled via the `pyproject.toml` file. Use `uv add` and `uv remove` to update your dependencies from the command line, or edit the `dependencies` section of `pyproject.toml` directly.
     
     `uv --help` has a complete list of the commands available with `uv`. 
 
-6. Update the project entrypoint in `pyproject.toml`
+4. Update the project entrypoint in `pyproject.toml`
 
     By now, your `pyproject.toml` should have a section that looks like 
     ```toml
