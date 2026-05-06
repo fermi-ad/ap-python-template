@@ -41,7 +41,7 @@ The workspace uses the external image referenced there, which is expected to pro
     1. [Set up access to the container's desktop](#ui-development-after-setup-is-complete)
     2. Run 
         ```bash
-        uv run auto-quad-centering
+        uv run ap-python-starter-kit
         ```
 
 ### Prerequisites
