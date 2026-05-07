@@ -26,7 +26,7 @@ The workspace uses the external image referenced there, which is expected to pro
 3. On your local machine, [install DevPod](https://devpod.sh/docs/getting-started/install#install-devpod).
 4. Open DevPod and enter the URL of your project's GitHub repository, or point it to the local directory if you've already cloned the repo.
 5. Select Docker as the "Provider"
-    - If on Windows, edit the advanced options to specify the "Host" as `tcp://127.0.0.1:2375`.
+    - If on Windows, edit the advanced options to specify the "Host" as `tcp://127.0.0.1:2375` and change "Docker Path" to "podman".
 6. Select VS Code as your IDE
 7. Click Create - the dev container will be pulled down and started for you, and VS Code should open
 8. After the workspace starts, open a terminal in VS Code and run
