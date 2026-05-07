@@ -127,10 +127,6 @@ DevPod's "Docker" provider talks to a Docker-compatible API endpoint. Podman can
     sudo systemctl status podman.socket
     ```
 
-11. In DevPod (Windows), select the Docker provider and set the Host to:
-
-    `tcp://127.0.0.1:2375`
-
 Note: If your environment blocks TCP listeners, you may need to adjust firewall / security tooling.
 
 ### UI development (After setup is complete)
