@@ -37,15 +37,11 @@ The workspace uses the external image referenced there, which is expected to pro
     ```bash
     uv run pytest
     ```
-10. Run the CLI app
-    ```bash
-    uv run ap-python-starter-kit
-    ```
-11. (Optional) Run the GUI
+10. (Optional) Run the GUI
     1. [Set up access to the container's desktop](#ui-development-after-setup-is-complete)
     2. Run 
         ```bash
-        uv run ap-python-starter-kit --gui
+        uv run ap-python-starter-kit
         ```
 
 ### Prerequisites
@@ -59,14 +55,14 @@ The workspace uses the external image referenced there, which is expected to pro
 
 #### Mac
 
-Mac users will require Docker to be installed. While Windows users can leverage Docker Engine to avoid licensing issues, Mac users will have to leverage an open-source alternative called [Colima](https://github.com/abiosoft/colima). 
+Mac users will require Docker to be installed. While Windows users can leverage Docker Engine to avoid licensing issues, Mac users will have to leverage an alternative called [OrbStack](https://orbstack.dev/). 
 
-1. Install Colima using [one of the provided methods](https://github.com/abiosoft/colima/blob/main/docs/INSTALL.md)
-2. Start Colima using 
+1. [Install OrbStack](https://orbstack.dev/download)
+2. Start OrbStack by opening the app, or run in a terminal:
     ```bash
-    colima start
+    orb start
     ```
-3. During DevPod setup, follow the instructions for using Docker as your provider. Colima will be substituted by DevPod automatically.
+3. During DevPod setup, follow the instructions for using Docker as your provider. OrbStack will be substituted by DevPod automatically.
 
 #### Windows
 
