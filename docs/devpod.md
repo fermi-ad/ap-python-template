@@ -20,13 +20,13 @@ The workspace uses the external image referenced there, which is expected to pro
 ### Setup
 
 1. Ensure [VS Code is set up](#vs-code). This includes installing some necessary extensions, listed in the instructions.
-2. Prepare your machine 
+2. Prepare your machine
     - [Mac](#mac)
     - [Windows](#windows)
 3. On your local machine, [install DevPod](https://devpod.sh/docs/getting-started/install#install-devpod).
 4. Open DevPod and enter the URL of your project's GitHub repository, or point it to the local directory if you've already cloned the repo.
 5. Select Docker as the "Provider"
-    - If on Windows, edit the advanced options to specify the "Host" as `tcp://127.0.0.1:2375`
+    - If on Windows, edit the advanced options to specify the "Host" as `tcp://127.0.0.1:2375`.
 6. Select VS Code as your IDE
 7. Click Create - the dev container will be pulled down and started for you, and VS Code should open
 8. After the workspace starts, open a terminal in VS Code and run
@@ -39,7 +39,7 @@ The workspace uses the external image referenced there, which is expected to pro
     ```
 10. (Optional) Run the GUI
     1. [Set up access to the container's desktop](#ui-development-after-setup-is-complete)
-    2. Run 
+    2. Run
         ```bash
         uv run ap-python-starter-kit
         ```
@@ -51,11 +51,11 @@ The workspace uses the external image referenced there, which is expected to pro
 1. [Install VS Code](https://code.visualstudio.com/download)
 2. Open VS Code and navigate to the Extensions tab (icon looks like four squares, where the top-right square is rotated 45 degrees)
 3. In the search bar at the top, type "Dev Containers" and install the extension from Microsoft
-4. (Windows-only) Do the same as step 3, searching for and installing the "WSL" extension (also by Microsoft) 
+4. (Windows-only) Do the same as step 3, searching for and installing the "WSL" extension (also by Microsoft)
 
 #### Mac
 
-Mac users will require Docker to be installed. While Windows users can leverage Docker Engine to avoid licensing issues, Mac users will have to leverage an alternative called [OrbStack](https://orbstack.dev/). 
+Mac users will run containers using the Docker-compatible [OrbStack](https://orbstack.dev/).
 
 1. [Install OrbStack](https://orbstack.dev/download)
 2. Start OrbStack by opening the app, or run in a terminal:
@@ -66,7 +66,9 @@ Mac users will require Docker to be installed. While Windows users can leverage 
 
 #### Windows
 
-If your local machine is running Windows, you will need to have Windows Subsystem for Linux installed, with Docker or some other pod management system installed there. Here are the steps to accomplish this:
+If your local machine is running Windows, you will need to have Windows Subsystem for Linux installed, with Podman installed there.
+
+This guide uses **Podman in WSL** and exposes a **Docker-compatible API endpoint** to DevPod on Windows.
 
 1. Run the following in a terminal with administrator rights (you may be asked to restart your machine)
     ```PowerShell
@@ -74,71 +76,66 @@ If your local machine is running Windows, you will need to have Windows Subsyste
     ```
     Ubuntu will be the default Linux distribution, and the remainder of this guide will target that.
 2. Open the Start menu and type `wsl`. Run the WSL application.
-3. You will be asked to set up a username and password in the Ubuntu instance. This has no bearing on your Windows environment. The user you set up will have administrator (sudo) permissions in the Ubuntu image. 
+3. You will be asked to set up a username and password in the Ubuntu instance. This has no bearing on your Windows environment. The user you set up will have administrator (sudo) permissions in the Ubuntu image.
 4. Update the packages installed by running
     ```bash
     sudo apt update && sudo apt upgrade
     ```
-5. Install needed packages for Docker
+
+##### Install Podman (in WSL Ubuntu)
+
+5. Install Podman from Ubuntu's repositories:
     ```bash
-    sudo apt install ca-certificates curl gnupg lsb-release
+    sudo apt install -y podman
     ```
-6. Set up GPG for Docker authentication
+6. Verify Podman is installed:
     ```bash
-    sudo mkdir -p /etc/apt/keyrings
+    podman version
     ```
+
+##### Expose Podman's Docker-compatible API to DevPod (TCP 2375)
+
+DevPod's "Docker" provider talks to a Docker-compatible API endpoint. Podman can provide this via its socket.
+
+7. Enable and start the Podman socket:
     ```bash
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    sudo systemctl enable --now podman.socket
     ```
-7. Configure GPG authentication 
+8. Configure the socket to listen on `tcp://127.0.0.1:2375` (so DevPod on Windows can reach it).
+
+    Create a systemd override for the socket:
     ```bash
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    sudo systemctl edit podman.socket
     ```
-8. Install Docker Engine
+
+    In the editor, add:
+    ```ini
+    [Socket]
+    ListenStream=
+    ListenStream=127.0.0.1:2375
+    ```
+
+    Note that both `ListenStream` lines are required.
+
+    Then reload and restart:
     ```bash
-    sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+    sudo systemctl daemon-reload && sudo systemctl restart podman.socket
     ```
-9. Add your user to the `docker` group (prevents needing to use `sudo` for every Docker command)
+
+9. Verify the socket is listening:
     ```bash
-    sudo usermod -aG docker $USER
+    sudo systemctl status podman.socket
     ```
-10. Start Docker
-    ```bash
-    sudo systemctl enable --now docker
-    ```
-    ```bash
-    sudo systemctl enable containerd
-    ```
-    Verify Docker is running
-    ```bash
-    sudo systemctl status docker
-    ```
-11. Configure Docker to be accessible to DevPod
-    ```bash
-    sudo systemctl edit --full docker.service
-    ```
-    This should open an editor. Look for 
-    ```
-    ...
-    [Service]
-    ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
-    ...
-    ```
-    On the end of this line, add `-H tcp://127.0.0.1:2375`. The full entry should now read
-    ```
-    ...
-    [Service]
-    ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock -H tcp://127.0.0.1:2375
-    ...
-    ```
-    Now run
-    ```bash
-    sudo systemctl daemon-reload && sudo systemctl restart docker.service
-    ```
+
+10. In DevPod (Windows), select the Docker provider and set the Host to:
+
+    `tcp://127.0.0.1:2375`
+
+Note: If your environment blocks TCP listeners, you may need to adjust firewall / security tooling.
 
 ### UI development (After setup is complete)
 
-While building your app, you'll probably want to test out changes to the UI before deploying. In the container, this requires one preliminary step. 
+While building your app, you'll probably want to test out changes to the UI before deploying. In the container, this requires one preliminary step.
 
 The development container comes with a minimal desktop overlay, in which your app will run when you kick it off. To see it, do the following:
 
@@ -148,7 +145,7 @@ The development container comes with a minimal desktop overlay, in which your ap
 4. If it doesn't open automatically, go to your web browser and navigate to `localhost:6080`
 5. Click "Connect"
 
-You're all set! Now when you run the app locally, it will come up in your web browser at `localhost:6080`. 
+You're all set! Now when you run the app locally, it will come up in your web browser at `localhost:6080`.
 
 ## Notes
 
