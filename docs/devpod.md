@@ -68,27 +68,30 @@ Mac users will run containers using the Docker-compatible [OrbStack](https://orb
 
 If your local machine is running Windows, you will need to have Windows Subsystem for Linux installed, with Podman installed there.
 
-This guide uses **Podman in WSL** and exposes a **Docker-compatible API endpoint** to DevPod on Windows.
+This guide uses **Podman** and exposes a **Docker-compatible API endpoint** to DevPod on Windows.
 
 1. Run the following in a terminal with administrator rights (you may be asked to restart your machine)
     ```PowerShell
     wsl --install
     ```
     Ubuntu will be the default Linux distribution, and the remainder of this guide will target that.
-2. Open the Start menu and type `wsl`. Run the WSL application.
-3. You will be asked to set up a username and password in the Ubuntu instance. This has no bearing on your Windows environment. The user you set up will have administrator (sudo) permissions in the Ubuntu image.
-4. Update the packages installed by running
+2. Install Podman Desktop on Windows:
+    - Download and install Podman Desktop: <https://podman-desktop.io/downloads/windows>
+    - Open Podman Desktop after installing so it can finish first-time setup. It will walk you through creating a Podman Machine. Be sure to select the WSL2 integration during this step.
+3. Open the Start menu and type `wsl`. Run the WSL application.
+4. You will be asked to set up a username and password in the Ubuntu instance. This has no bearing on your Windows environment. The user you set up will have administrator (sudo) permissions in the Ubuntu image.
+5. Update the packages installed by running
     ```bash
     sudo apt update && sudo apt upgrade
     ```
 
 ##### Install Podman (in WSL Ubuntu)
 
-5. Install Podman from Ubuntu's repositories:
+6. Install Podman from Ubuntu's repositories:
     ```bash
     sudo apt install -y podman
     ```
-6. Verify Podman is installed:
+7. Verify Podman is installed:
     ```bash
     podman version
     ```
@@ -97,11 +100,11 @@ This guide uses **Podman in WSL** and exposes a **Docker-compatible API endpoint
 
 DevPod's "Docker" provider talks to a Docker-compatible API endpoint. Podman can provide this via its socket.
 
-7. Enable and start the Podman socket:
+8. Enable and start the Podman socket:
     ```bash
     sudo systemctl enable --now podman.socket
     ```
-8. Configure the socket to listen on `tcp://127.0.0.1:2375` (so DevPod on Windows can reach it).
+9. Configure the socket to listen on `tcp://127.0.0.1:2375` (so DevPod on Windows can reach it).
 
     Create a systemd override for the socket:
     ```bash
@@ -111,23 +114,20 @@ DevPod's "Docker" provider talks to a Docker-compatible API endpoint. Podman can
     In the editor, add:
     ```ini
     [Socket]
-    ListenStream=
     ListenStream=127.0.0.1:2375
     ```
-
-    Note that both `ListenStream` lines are required.
 
     Then reload and restart:
     ```bash
     sudo systemctl daemon-reload && sudo systemctl restart podman.socket
     ```
 
-9. Verify the socket is listening:
+10. Verify the socket is listening:
     ```bash
     sudo systemctl status podman.socket
     ```
 
-10. In DevPod (Windows), select the Docker provider and set the Host to:
+11. In DevPod (Windows), select the Docker provider and set the Host to:
 
     `tcp://127.0.0.1:2375`
 
