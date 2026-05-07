@@ -92,7 +92,9 @@ This template comes preconfigured for Continuous Integration and Continuous Deli
 
 Upon merging changes in to the `main` branch, your application will be built and packaged into a container. The default deployment behavior is controlled by [`IMAGE_VARIANT`](.github/workflows/ci-cd.yaml:20) in [`.github/workflows/ci-cd.yaml`](.github/workflows/ci-cd.yaml). It is currently set to `gui-xpra`, which builds the browser-served GUI variant by default. If your application is intended as a headless service, or works better from the command line, change [`IMAGE_VARIANT`](.github/workflows/ci-cd.yaml:20) to `cli`.
 
-Once the container is built, it will be pushed into Harbor at `adregistry.fnal.gov` so it can be deployed into the Kubernetes environment. Before images can be pushed to Harbor, a GitHub fermi-ad admin must add the appropriate GitHub App containing the AP Python Harbor secrets to your repository. Reach out to beau@fnal.gov or mariana@fnal.gov for this before you attempt to deploy.
+Once the container is built, it will be pushed into Harbor at `adregistry.fnal.gov` so it can be deployed into the Kubernetes environment. Before images can be pushed to Harbor, **a GitHub fermi-ad admin must add the appropriate GitHub App containing the AP Python Harbor secrets to your repository**. Reach out to beau@fnal.gov or mariana@fnal.gov for this before you attempt to deploy.
+
+After successful deployment, navigate to the [AP Python Launcher](https://ad-apps-internal.fnal.gov/ap-python/) to launch your app!
 
 To reiterate: **deployment will happen on every commit to the `main` branch.** If you do not want a new container being generated every time you make a change (e.g., if you're in the middle of implementing a new feature and want to do it in stages), the recommended approach is to create a "feature" branch that tracks your pending updates. Starting on `main`, the process would look something like this:
 
@@ -106,4 +108,4 @@ To reiterate: **deployment will happen on every commit to the `main` branch.** I
 7. Repeat steps 2-6 until your feature branch has all the changes you want to make and is ready to be deployed
 8. Open a pull request from your feature branch into `main` -> Runs the automated integration workflow one last time on all your changes together
 9. Merge into `main` -> Constructs the new container for your application and delivers it to Harbor
-   - Congrats! Your changes are now ready to be deployed.
+   - Congrats! Your changes are now deployed to the [AP Python Launcher](https://ad-apps-internal.fnal.gov/ap-python/)!
