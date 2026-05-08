@@ -26,7 +26,7 @@ The workspace uses the external image referenced there, which is expected to pro
 3. On your local machine, [install DevPod](https://devpod.sh/docs/getting-started/install#install-devpod).
 4. Open DevPod and enter the URL of your project's GitHub repository, or point it to the local directory if you've already cloned the repo.
 5. Select Docker as the "Provider"
-    - If on Windows, edit the advanced options to specify the "Host" as `tcp://127.0.0.1:2375`.
+    - If on Windows, edit the advanced options to specify the "Host" as `tcp://127.0.0.1:2375` and change "Docker Path" to "podman".
 6. Select VS Code as your IDE
 7. Click Create - the dev container will be pulled down and started for you, and VS Code should open
 8. After the workspace starts, open a terminal in VS Code and run
@@ -72,22 +72,21 @@ This guide uses **Podman** and exposes a **Docker-compatible API endpoint** to D
 
 1. Run the following in a terminal with administrator rights (you may be asked to restart your machine)
     ```PowerShell
-    wsl --install
+    wsl --install -d Ubuntu
     ```
-    Ubuntu will be the default Linux distribution, and the remainder of this guide will target that.
-2. Install Podman Desktop on Windows:
-    - Download and install Podman Desktop: <https://podman-desktop.io/downloads/windows>
-    - Open Podman Desktop after installing so it can finish first-time setup. It will walk you through creating a Podman Machine. Be sure to select the WSL2 integration during this step.
-3. Open the Start menu and type `wsl`. Run the WSL application.
-4. You will be asked to set up a username and password in the Ubuntu instance. This has no bearing on your Windows environment. The user you set up will have administrator (sudo) permissions in the Ubuntu image.
-5. Update the packages installed by running
+2. Open the Start menu and type `wsl`. Run the WSL application.
+3. You will be asked to set up a username and password in the Ubuntu instance. This has no bearing on your Windows environment. The user you set up will have administrator (sudo) permissions in the Ubuntu image.
+4. Update the packages installed by running
     ```bash
     sudo apt update && sudo apt upgrade
     ```
 
-##### Install Podman (in WSL Ubuntu)
+##### Install Podman
 
-6. Install Podman from Ubuntu's repositories:
+5. Install Podman Desktop on Windows:
+    - Download and install Podman Desktop: <https://podman-desktop.io/downloads/windows>
+    - Open Podman Desktop after installing so it can finish first-time setup. It will walk you through creating a Podman Machine. Be sure to select the WSL2 integration during this step.
+6. Install Podman on your WSL instance from Ubuntu's repositories:
     ```bash
     sudo apt install -y podman
     ```
