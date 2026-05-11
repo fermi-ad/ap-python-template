@@ -29,6 +29,7 @@ The workspace uses the external image referenced there, which is expected to pro
     - If on Windows, edit the advanced options to specify the "Host" as `tcp://127.0.0.1:2375` and change "Docker Path" to "podman".
 6. Select VS Code as your IDE
 7. Click Create - the dev container will be pulled down and started for you, and VS Code should open
+    - If you have trouble with this step on Windows, see [Troubleshooting DevPod on Windows](#troubleshooting-devpod-on-windows)
 8. After the workspace starts, open a terminal in VS Code and run
     ```bash
     uv sync --dev --all-extras
@@ -149,3 +150,22 @@ You're all set! Now when you run the app locally, it will come up in your web br
 - If your DevPod or dev container image defines shell aliases that reference the placeholder project name, update that environment after renaming the project.
 - This workspace intentionally uses an external dev container image for fast startup.
   - The repo's Docker-based workflow is still available in [`docs/container.md`](docs/container.md) for building runnable images and the optional browser-served GUI (Xpra HTML) target.
+
+### Troubleshooting DevPod on Windows
+
+#### `podman` binary not found in `%PATH%` during DevPod workspace build
+
+Run in PowerShell to extend your path, replacing `[your user]` with your username:
+
+```PowerShell
+[Environment]::SetEnvironmentVariable("PATH", $env:PATH + ";C:\Users\[your user]\.local\bin", "User")
+```
+
+#### VS Code fails to connect to running workspace with `Bad owner or permissions on C:\\Users\\[username]/.ssh/config` error in terminal
+
+Run in PowerShell to set the correct permissions for the SSH config folder:
+
+```PowerShell
+icacls "$env:USERPROFILE\.ssh\config" /setowner "$env:USERNAME"
+icacls "$env:USERPROFILE\.ssh\config" /inheritance:r /grant:r "${env:USERNAME}:(F)"
+```
