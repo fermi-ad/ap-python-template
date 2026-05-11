@@ -153,6 +153,8 @@ You're all set! Now when you run the app locally, it will come up in your web br
 
 ### Troubleshooting DevPod on Windows
 
+After applying any of these fixes, be sure to fully stop Podman and DevPod (making sure their icons are not still present in the taskbar hidden icons menu) restart them, and then create a new DevPod workspace from scratch (starting from [step 4](#setup) above)
+
 #### `podman` binary not found in `%PATH%` during DevPod workspace build
 
 Run in PowerShell to extend your path, replacing `[your user]` with your username:
@@ -160,6 +162,8 @@ Run in PowerShell to extend your path, replacing `[your user]` with your usernam
 ```PowerShell
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH + ";C:\Users\[your user]\.local\bin", "User")
 ```
+
+Also try deleting any pre-existing `C:\Users\[your user]\.docker` folder, as this may interfere with the Podman configuration.
 
 #### VS Code fails to connect to running workspace with `Bad owner or permissions on C:\\Users\\[username]/.ssh/config` error in terminal
 
