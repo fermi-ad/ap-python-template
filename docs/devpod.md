@@ -67,67 +67,23 @@ Mac users will run containers using the Docker-compatible [OrbStack](https://orb
 
 #### Windows
 
-If your local machine is running Windows, you will need to have Windows Subsystem for Linux installed, with Podman installed there.
-
-This guide uses **Podman** and exposes a **Docker-compatible API endpoint** to DevPod on Windows.
+If your local machine is running Windows, you will need to have Podman installed and set up to use Windows Subsystem for Linux as its unix runtime host.
 
 1. Run the following in a terminal with administrator rights (you may be asked to restart your machine)
     ```PowerShell
-    wsl --install -d Ubuntu
+    wsl --install --no-distribution
     ```
-2. Open the Start menu and type `wsl`. Run the WSL application.
-3. You will be asked to set up a username and password in the Ubuntu instance. This has no bearing on your Windows environment. The user you set up will have administrator (sudo) permissions in the Ubuntu image.
-4. Update the packages installed by running
-    ```bash
-    sudo apt update && sudo apt upgrade
+2. Ensure WSL has the latest kernel by running
+    ```PowerShell
+    wsl --update
     ```
-
-##### Install Podman
-
-5. Install Podman Desktop on Windows:
+3. Install Podman Desktop on Windows:
     - Download and install Podman Desktop: <https://podman-desktop.io/downloads/windows>
     - Open Podman Desktop after installing so it can finish first-time setup. It will walk you through creating a Podman Machine. Be sure to select the WSL2 integration during this step.
-6. Install Podman on your WSL instance from Ubuntu's repositories:
-    ```bash
-    sudo apt install -y podman
-    ```
-7. Verify Podman is installed:
-    ```bash
+4. Verify Podman is installed:
+    ```PowerShell
     podman version
     ```
-
-##### Expose Podman's Docker-compatible API to DevPod (TCP 2375)
-
-DevPod's "Docker" provider talks to a Docker-compatible API endpoint. Podman can provide this via its socket.
-
-8. Enable and start the Podman socket:
-    ```bash
-    sudo systemctl enable --now podman.socket
-    ```
-9. Configure the socket to listen on `tcp://127.0.0.1:2375` (so DevPod on Windows can reach it).
-
-    Create a systemd override for the socket:
-    ```bash
-    sudo systemctl edit podman.socket
-    ```
-
-    In the editor, add:
-    ```ini
-    [Socket]
-    ListenStream=127.0.0.1:2375
-    ```
-
-    Then reload and restart:
-    ```bash
-    sudo systemctl daemon-reload && sudo systemctl restart podman.socket
-    ```
-
-10. Verify the socket is listening:
-    ```bash
-    sudo systemctl status podman.socket
-    ```
-
-Note: If your environment blocks TCP listeners, you may need to adjust firewall / security tooling.
 
 ### UI development (After setup is complete)
 
