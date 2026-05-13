@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+APP_NAME="${APP_NAME:-ap-python-starter-kit}"
 XPRA_DISPLAY="${XPRA_DISPLAY:-:100}"
 XPRA_BIND_HOST="${XPRA_BIND_HOST:-0.0.0.0}"
 XPRA_BIND_PORT="${XPRA_BIND_PORT:-14500}"
@@ -52,14 +53,12 @@ xpra start "${XPRA_DISPLAY}" \
   --pulseaudio=no \
   --notifications=no \
   --bell=no \
-  --xsettings=no \
+  --headerbar=force \
   --mdns=no \
   --dbus-launch=no \
   --dbus-control=no \
-  --lock=yes \
-  --sharing=no \
-  --start-new-commands=no \
-  --shell=no \
+  --session-name="${APP_NAME}" \
+  --dpi=0 \
   >>"${XPRA_LOG_FILE}" 2>&1 &
 
 READY_HOST="127.0.0.1"

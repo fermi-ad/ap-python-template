@@ -158,11 +158,15 @@ LABEL org.opencontainers.image.source="https://github.com/fermi-ad/ap-python-tem
 LABEL org.opencontainers.image.description="Python application template (Xpra GUI runtime)"
 LABEL org.opencontainers.image.title="ap-python-template-xpra"
 
+# Copy built venv from xpra-builder stage
 COPY --from=xpra-builder /usr/local /usr/local
-COPY docker/start.sh /usr/local/bin/start.sh
-RUN chmod +x /usr/local/bin/start.sh
 
-WORKDIR /app
+# Copy Xpra startup script with execute permissions
+COPY --chmod=755 docker/start.sh /usr/local/bin/start.sh
+
+# Run from user's home dir so Xpra's file upload/download dialog opens to the 
+# same dir as the app's generated files 
+WORKDIR /home/pyuser
 
 # Switch to non-root user for runtime security
 USER pyuser:pygroup
