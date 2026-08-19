@@ -66,6 +66,22 @@ Read more in [`docs/container.md`](docs/container.md).
 
 The Dockerfile also contains additional internal build stages used to assemble those runtime images.
 
+### Xpra Lifecycle Settings
+
+The Xpra GUI container's shutdown behavior is configured by the lifecycle variables near the top of [`docker/start.sh`](docker/start.sh):
+
+```bash
+XPRA_EXIT_WITH_CHILDREN="${XPRA_EXIT_WITH_CHILDREN:-yes}"
+XPRA_EXIT_WITH_WINDOWS="${XPRA_EXIT_WITH_WINDOWS:-yes}"
+XPRA_SERVER_IDLE_TIMEOUT="${XPRA_SERVER_IDLE_TIMEOUT:-300}"
+```
+
+- `XPRA_EXIT_WITH_CHILDREN` stops Xpra when the launched application process exits. Default: yes
+- `XPRA_EXIT_WITH_WINDOWS` stops Xpra when the application no longer has any windows open. Default: yes
+- `XPRA_SERVER_IDLE_TIMEOUT` controls how many seconds Xpra can remain idle before stopping. Default: 300
+
+Adjust these values in [`docker/start.sh`](docker/start.sh), or override the variables in the deployment environment, when an application needs different lifecycle behavior.
+
 ## FNAL Kerberos Defaults
 
 This template assumes new applications will run in the `FNAL.GOV` Kerberos environment.

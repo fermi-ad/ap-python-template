@@ -76,6 +76,22 @@ make run-gui APP_CMD="python -m ap_python_starter_kit.gui"
 
 For the Xpra image, `APP_CMD` is the supported way to replace the default GUI command that [`docker/start.sh`](docker/start.sh) launches. This override support is specific to the Xpra path and does not apply to the CLI [`runtime`](Dockerfile:62) stage.
 
+### Configure Xpra lifecycle behavior
+
+The Xpra lifecycle settings are defined near the top of [`docker/start.sh`](docker/start.sh), alongside the other variables developers may want to change:
+
+```bash
+XPRA_EXIT_WITH_CHILDREN="${XPRA_EXIT_WITH_CHILDREN:-yes}"
+XPRA_EXIT_WITH_WINDOWS="${XPRA_EXIT_WITH_WINDOWS:-yes}"
+XPRA_SERVER_IDLE_TIMEOUT="${XPRA_SERVER_IDLE_TIMEOUT:-300}"
+```
+
+- `XPRA_EXIT_WITH_CHILDREN` stops Xpra when the launched application process exits.
+- `XPRA_EXIT_WITH_WINDOWS` stops Xpra when the application has no windows left open.
+- `XPRA_SERVER_IDLE_TIMEOUT` controls how many seconds Xpra can remain idle before stopping.
+
+Edit the defaults in [`docker/start.sh`](docker/start.sh) for a project-wide change, or provide the variables through the deployment environment. The current `make run-gui` target does not forward these variables as make arguments.
+
 Security note:
 
 - Xpra HTML is configured with `--auth=none` (no password). Do not expose this port publicly.

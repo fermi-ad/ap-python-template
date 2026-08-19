@@ -1,17 +1,47 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+################################ Configuration ################################
+######## Edit these defaults or override them through the environment. ########
+
+### Xpra connection settings.
+# Xpra session name.
 APP_NAME="${APP_NAME:-ap-python-starter-kit}"
+# Xpra display number.
 XPRA_DISPLAY="${XPRA_DISPLAY:-:100}"
-XPRA_BIND_HOST="${XPRA_BIND_HOST:-0.0.0.0}"
-XPRA_BIND_PORT="${XPRA_BIND_PORT:-14500}"
-XPRA_HTML="${XPRA_HTML:-on}"
-# HTML mode: no password needed, no native client auth.
+# Xpra authentication method (if any).
 XPRA_AUTH="${XPRA_AUTH:-none}"
 
+### Xpra HTML client settings.
+# Enable or disable Xpra's HTML client.
+XPRA_HTML="${XPRA_HTML:-on}"
+# Host and port where Xpra serves its HTML client.
+XPRA_BIND_HOST="${XPRA_BIND_HOST:-0.0.0.0}"
+XPRA_BIND_PORT="${XPRA_BIND_PORT:-14500}"
+
+### Application and logging settings.
+# Command launched by Xpra.
 APP_CMD="${APP_CMD:-python -m ap_python_starter_kit.main}"
+# Paths for Xpra and application logs.
 XPRA_LOG_FILE="${XPRA_LOG_FILE:-/tmp/xpra.log}"
 APP_LOG_FILE="${APP_LOG_FILE:-/tmp/app.log}"
+
+### Xpra lifecycle settings.
+# Stop Xpra when the launched application process (APP_CMD) exits.
+XPRA_EXIT_WITH_CHILDREN="${XPRA_EXIT_WITH_CHILDREN:-yes}"
+# Stop Xpra when the application no longer has any windows open.
+XPRA_EXIT_WITH_WINDOWS="${XPRA_EXIT_WITH_WINDOWS:-yes}"
+# Stop Xpra after this many seconds of server idle time.
+XPRA_SERVER_IDLE_TIMEOUT="${XPRA_SERVER_IDLE_TIMEOUT:-300}"
+
+### Directory settings.
+# Base directory used for writable runtime paths.
+RUNTIME_BASE="${RUNTIME_BASE:-/tmp}"
+# Runtime directories used by Xpra and the application user.
+XDG_RUNTIME_DIR_DEFAULT="${XDG_RUNTIME_DIR:-${RUNTIME_BASE}/runtime-pyuser}"
+XPRA_RUN_DIR_DEFAULT="${XPRA_RUN_DIR:-${RUNTIME_BASE}/xpra}"
+USER_RUN_DIR_DEFAULT="${USER_RUN_DIR:-${RUNTIME_BASE}/user-1000}"
+###############################################################################
 
 cleanup() {
   echo "[start.sh] shutting down"
@@ -19,13 +49,6 @@ cleanup() {
 }
 
 trap cleanup SIGINT SIGTERM EXIT
-
-# Prefer writable runtime dirs when running as non-root (common in OpenShift/K8s).
-# /run is often read-only for unprivileged containers.
-RUNTIME_BASE="${RUNTIME_BASE:-/tmp}"
-XDG_RUNTIME_DIR_DEFAULT="${XDG_RUNTIME_DIR:-${RUNTIME_BASE}/runtime-pyuser}"
-XPRA_RUN_DIR_DEFAULT="${XPRA_RUN_DIR:-${RUNTIME_BASE}/xpra}"
-USER_RUN_DIR_DEFAULT="${USER_RUN_DIR:-${RUNTIME_BASE}/user-1000}"
 
 mkdir -p "${USER_RUN_DIR_DEFAULT}" "${XDG_RUNTIME_DIR_DEFAULT}" "${XPRA_RUN_DIR_DEFAULT}" /tmp/.X11-unix
 chmod 700 "${USER_RUN_DIR_DEFAULT}" "${XDG_RUNTIME_DIR_DEFAULT}" "${XPRA_RUN_DIR_DEFAULT}" || true
@@ -46,9 +69,9 @@ xpra start "${XPRA_DISPLAY}" \
   --html="${XPRA_HTML}" \
   --auth="${XPRA_AUTH}" \
   --daemon=no \
-  --exit-with-children=yes \
-  --exit-with-windows=yes \
-  --server-idle-timeout=300 \
+  --exit-with-children="${XPRA_EXIT_WITH_CHILDREN}" \
+  --exit-with-windows="${XPRA_EXIT_WITH_WINDOWS}" \
+  --server-idle-timeout="${XPRA_SERVER_IDLE_TIMEOUT}" \
   --start-child="/bin/bash -lc '${APP_CMD} >>\"${APP_LOG_FILE}\" 2>&1'" \
   --pulseaudio=no \
   --notifications=no \
