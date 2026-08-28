@@ -6,7 +6,6 @@
 # ============================================================================
 ARG ALMALINUX_VERSION=9-base
 ARG PYTHON_VERSION=3.12
-ARG PYQT_VERSION="PyQt6~=6.10"
 
 # ============================================================================
 # Base stage: Minimal runtime dependencies
@@ -79,79 +78,30 @@ ENV APP_CMD="python -m ap_python_starter_kit.main"
 ENTRYPOINT ["/bin/bash", "-lc", "python -m ap_python_starter_kit.main"]
 
 # ============================================================================
-# Xpra-base stage: Adds Xpra server for web-based GUI access
-# Base for xpra-runtime deployment with HTML5 client
-# ============================================================================
-FROM base AS xpra-base
-
-USER root
-
-# Enable EPEL and Xpra repositories, then install Xpra server
-RUN dnf install -y \
-      'dnf-command(config-manager)' \
- && dnf config-manager --set-enabled crb \
- && dnf install -y epel-release \
- && curl -L -o /etc/yum.repos.d/xpra.repo \
-      https://raw.githubusercontent.com/Xpra-org/xpra/master/packaging/repos/almalinux/xpra.repo \
- && dnf makecache \
- && dnf install -y xpra \
- && dnf clean all
-
-# Install curl for start.sh readiness checks and healthchecks
-RUN dnf install -y --allowerasing curl && dnf clean all
-
-# Install GUI runtime libraries (python already present from `base`)
-RUN dnf install -y \
-      libxcb \
-      libxkbcommon \
-      libxkbcommon-x11 \
-      xcb-util \
-      xcb-util-image \
-      xcb-util-keysyms \
-      xcb-util-renderutil \
-      xcb-util-wm \
-      xcb-util-cursor
-
-# Install D-Bus and configure machine ID for Xpra
-RUN dnf install -y dbus && dnf clean all
-RUN rm -f /etc/machine-id && dbus-uuidgen --ensure=/etc/machine-id
-
-# Create runtime directories for Xpra with proper permissions
-# User already created in `base` stage
-RUN mkdir -p /run/user/1000 /tmp/runtime-pyuser /tmp/.X11-unix /run/xpra \
- && chown -R pyuser:pygroup /run/user/1000 /tmp/runtime-pyuser /run/xpra \
- && chmod 700 /run/user/1000 /tmp/runtime-pyuser /run/xpra \
- && chmod 1777 /tmp/.X11-unix
-
-# ============================================================================
 # Xpra-builder stage: Build Python venv with PyQt for Xpra deployment
 # ============================================================================
-FROM xpra-base AS xpra-builder
-
-# Re-declare args for use in this stage
-ARG PYQT_VERSION
+FROM adregistry.fnal.gov/dev-containers/ap-python-xpra-base AS xpra-builder
 
 WORKDIR /install
-
-# Install build tools needed for compiling Python packages
-RUN dnf install -y gcc gcc-c++ make krb5-devel && dnf clean all
-
-# Install uv (fast Python package manager) from astral.sh
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.local/bin:${PATH}"
 
 COPY pyproject.toml README.md ./
 COPY src ./src
 
-RUN uv venv /usr/local/.venv \
- && uv pip install --python /usr/local/.venv/bin/python --no-cache-dir . \
- && uv pip install --python /usr/local/.venv/bin/python --no-cache-dir "${PYQT_VERSION}"
+ENV PATH="/root/.local/bin:${PATH}"
+
+# Install build tools needed for compiling Python packages
+# Install uv (fast Python package manager) from astral.sh
+RUN dnf install -y gcc gcc-c++ make krb5-devel \
+ && dnf clean all \
+ && curl -LsSf https://astral.sh/uv/install.sh | sh \
+ && uv venv /usr/local/.venv \
+ && uv pip install --python /usr/local/.venv/bin/python --no-cache-dir .
 
 # ============================================================================
 # Xpra-runtime stage: Web-based GUI deployment via Xpra HTML5 client
 # Exposes GUI on port 14500, accessible via web browser
 # ============================================================================
-FROM xpra-base AS xpra-runtime
+FROM adregistry.fnal.gov/dev-containers/ap-python-xpra-base AS xpra-runtime
 
 # OCI labels for better metadata and discoverability
 LABEL org.opencontainers.image.source="https://github.com/fermi-ad/ap-python-template"
@@ -176,10 +126,8 @@ ENV PATH="/usr/local/.venv/bin:${PATH}"
 
 # Enable Xpra HTML5 client for web browser access
 ENV XPRA_HTML=on XCURSOR_SIZE=24
-EXPOSE 14500
 
-# Default to integrated package GUI in Xpra deployment via the main entrypoint
-ENV APP_CMD="python -m ap_python_starter_kit.main --gui"
+EXPOSE 14500
 
 # Health check to verify Xpra server is responsive
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
