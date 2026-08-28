@@ -95,7 +95,7 @@ RUN dnf install -y gcc gcc-c++ make krb5-devel \
  && dnf clean all \
  && curl -LsSf https://astral.sh/uv/install.sh | sh \
  && uv venv /usr/local/.venv \
- && uv pip install --python /usr/local/.venv/bin/python --no-cache-dir .
+ && uv pip install --python /usr/local/.venv/bin/python --no-cache-dir .[gui-pyqt]
 
 # ============================================================================
 # Xpra-runtime stage: Web-based GUI deployment via Xpra HTML5 client
