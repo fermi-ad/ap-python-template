@@ -21,7 +21,7 @@ XPRA_BIND_PORT="${XPRA_BIND_PORT:-14500}"
 
 ### Application and logging settings.
 # Command launched by Xpra.
-APP_CMD="${APP_CMD:-python -m ap_python_starter_kit.main}"
+APP_CMD="${APP_CMD:-python -m ap_python_starter_kit.main --gui}"
 # Paths for Xpra and application logs.
 XPRA_LOG_FILE="${XPRA_LOG_FILE:-/tmp/xpra.log}"
 APP_LOG_FILE="${APP_LOG_FILE:-/tmp/app.log}"
