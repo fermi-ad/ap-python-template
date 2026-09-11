@@ -1,7 +1,5 @@
 # AP Python Template
 
-Python starter kit
-
 A Python-first project template with one installable application package that provides a default CLI experience and an optional PyQt GUI activated through the same launcher, plus built-in Kerberos-aware container support for `FNAL.GOV` environments.
 
 ## Quickstart
