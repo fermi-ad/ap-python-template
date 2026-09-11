@@ -1,6 +1,4 @@
-# ap-python-starter-kit
-
-Python starter kit
+# AP Python Template
 
 A Python-first project template with one installable application package that provides a default CLI experience and an optional PyQt GUI activated through the same launcher, plus built-in Kerberos-aware container support for `FNAL.GOV` environments.
 
@@ -108,7 +106,11 @@ This template comes preconfigured for Continuous Integration and Continuous Deli
 
 Upon merging changes in to the `main` branch, your application will be built and packaged into a container. The default deployment behavior is controlled by [`IMAGE_VARIANT`](.github/workflows/ci-cd.yaml:20) in [`.github/workflows/ci-cd.yaml`](.github/workflows/ci-cd.yaml). It is currently set to `gui-xpra`, which builds the browser-served GUI variant by default. If your application is intended as a headless service, or works better from the command line, change [`IMAGE_VARIANT`](.github/workflows/ci-cd.yaml:20) to `cli`.
 
-Once the container is built, it will be pushed into Harbor at `adregistry.fnal.gov` so it can be deployed into the Kubernetes environment. Before images can be pushed to Harbor, **a GitHub fermi-ad admin must add the appropriate GitHub App containing the AP Python Harbor secrets to your repository**. Reach out to beau@fnal.gov or mariana@fnal.gov for this before you attempt to deploy.
+Once the container is built, it will be pushed into Harbor at `adregistry.fnal.gov` so it can be deployed into the Kubernetes environment. Before images can be pushed to Harbor, **a GitHub fermi-ad admin must add the appropriate GitHub App containing the AP Python Harbor secrets to your repository**. Email or Slack this group of people before you attempt to deploy:
+  - Connor Howington (chowingt@fnal.gov)
+  - Jacob Curley (jcurley@fnal.gov)
+  - Beau Harrison (beau@fnal.gov)
+  - Mariana Gonzalez (mariana@fnal.gov)
 
 After successful deployment, navigate to the [AP Python Launcher](https://ad-apps-internal.fnal.gov/ap-python/) to launch your app!
 
