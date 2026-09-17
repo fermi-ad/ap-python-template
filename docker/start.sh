@@ -72,6 +72,7 @@ xpra start "${XPRA_DISPLAY}" \
   --exit-with-children="${XPRA_EXIT_WITH_CHILDREN}" \
   --exit-with-windows="${XPRA_EXIT_WITH_WINDOWS}" \
   --server-idle-timeout="${XPRA_SERVER_IDLE_TIMEOUT}" \
+  --start-child="openbox" \
   --start-child="/bin/bash -lc '${APP_CMD} >>\"${APP_LOG_FILE}\" 2>&1'" \
   --pulseaudio=no \
   --notifications=no \
