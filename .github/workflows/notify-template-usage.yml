@@ -1,0 +1,15 @@
+name: Notify template usage
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  notify-template-usage:
+    uses: fermi-ad/.github/.github/workflows/notify-template-usage.yml@4a53f7bed69673766cd7688accb99556911c857c
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
