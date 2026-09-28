@@ -2,7 +2,7 @@
 
 This repository is a starting point, not the finished application. You will create **your own repository**, open a prepared development workspace, rename the package, check the included example, and then customize it with your code. The example CLI queries ACSys and has an optional PyQt window; those demo behaviors are not requirements. Use the provided [deployment guide](deployment.md) when you are ready to deliver your app through the maintained workflows.
 
-Run the commands below in a terminal at the root of **your new repository**. [DevPod setup](devpod.md) is the recommended way to get that terminal; setting up a host Python environment yourself is an advanced alternative.
+Run the commands below in a terminal at the root of **your new repository**. [DevPod setup](devpod.md) is the supported way to use the common development tools and check the uv project before integration. You can write code elsewhere, but your repository must still support the maintainer-run integration workflow's uv-based installation and checks; see [Everyday development](development.md#stay-compatible-with-integration). Setting up a host Python environment yourself is an advanced alternative, not a different project setup.
 
 ## 1. Create a repository from the template
 
@@ -53,4 +53,4 @@ uv run ruff format --check .
 uv run ruff check .
 ```
 
-Update the example tests to test **your** program rather than only the template behavior. See [Everyday development](development.md) for adding dependencies, running and updating tests, and committing changes. When your app is ready, follow [CI and deployment](deployment.md) for the provided branch, pull-request, image-choice, Harbor-access, and delivery steps; that guide has the relevant admin request and contacts.
+Update the example tests to test **your** program rather than only the template behavior. Keep the project's uv-based setup and tests working for integration; see [Everyday development](development.md#stay-compatible-with-integration) for the expected project layout and normal edit-and-check cycle. When your app is ready, follow [CI and deployment](deployment.md) for the branch, pull-request, image-choice, Harbor-access, and delivery steps.

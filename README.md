@@ -7,7 +7,7 @@ This Python 3.12+ repository is a **template for your own application**, not a f
 ## Start here
 
 1. On the [template's GitHub page](https://github.com/fermi-ad/ap-python-template), select **Use this template → Create a new repository**. Work in your **new** repository, not the template.
-2. Open your repository in DevPod using the [workspace setup guide](docs/devpod.md#start-a-workspace). Its development image is maintained externally; you need access to pull it and install the starter dependencies, not to maintain it.
+2. Open your repository in DevPod using the [workspace setup guide](docs/devpod.md#start-a-workspace). Its development image is maintained externally and supplies the common tools used to check your app. Keep the project's uv configuration working so the maintainer-run integration workflow can install and check it; you do not maintain the image or the workflow.
 3. In the workspace terminal, check the example command without connecting to ACSys:
 
    ```bash
@@ -22,8 +22,8 @@ This Python 3.12+ repository is a **template for your own application**, not a f
 - [Quickstart](docs/quickstart.md) — create, rename, sync, and check your project.
 - [DevPod and dev containers](docs/devpod.md) — workspace setup and development desktop.
 - [Make the template your application](docs/application.md) — customize the starter CLI, tests, and optional GUI.
-- [Everyday development](docs/development.md) — dependencies, tests, and code quality.
-- [Container usage](docs/container.md) — optional local CLI and Xpra image checks; not required for delivery.
+- [Everyday development](docs/development.md) — dependencies, tests, code quality, and keeping the project compatible with integration.
+- [Container usage](docs/container.md) — optional local CLI and Xpra image checks and advanced settings; not required for delivery.
 - [CI and deployment](docs/deployment.md) — maintained workflow path, image choice, and Harbor GitHub App contacts.
 - [Fermilab Kerberos defaults](docs/kerberos.md) — control-system authentication versus configuration and runtime tickets.
 - [Migrating an existing Python project](docs/migration.md) — adapt existing code and dependencies.

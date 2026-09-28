@@ -1,12 +1,12 @@
 # Container usage
 
-**Most beginners do not need to build a container image locally.** Start in your [development workspace](quickstart.md), customize the sample ACSys CLI/PyQt code for [your application](application.md#replace-the-example-step-by-step), and run and test it with the [local development commands](development.md). When your app is ready, follow [CI and deployment](deployment.md) to choose an image and deliver it through the provided workflows. In a new repository, a fermi-ad admin must grant the GitHub App with Harbor secrets access to your repository before delivery can push an image; the [deployment guide](deployment.md#deploy-your-application-step-by-step) explains whom to contact. You do not need to create Harbor secrets or operate the shared deployment environment yourself.
+**Local image builds are optional.** Develop and test your app in the [shared DevPod workspace](devpod.md) using the [development checks](development.md), then follow [CI and deployment](deployment.md) for normal delivery. You do not need to build images or manage Harbor credentials; a fermi-ad admin grants access to new repositories as described in the deployment guide.
 
-**Build an image locally only if you want to check how your app starts inside a deployment-style container** or troubleshoot image-specific problems. These optional commands require a working Docker engine, access to the base images and dependencies, and a terminal at your repository root. This guide covers deployment images, not the external [DevPod development workspace](devpod.md) or its desktop on port 6080.
+Use the commands here only to check container startup or troubleshoot an image-specific problem. They require a working Docker engine, access to the base images and dependencies, and a terminal at your repository root. These deployment images are separate from the DevPod development workspace and its desktop on port 6080. See [advanced image settings](#advanced-local-image-settings) only if the basic checks are insufficient.
 
 A **CLI image** runs a command-line/headless program and prints output to its container logs; it does not provide a browser page. A **GUI image** uses Xpra to show a running desktop window in a browser: the app still runs in the container, not as a native website. The untouched template's CLI queries ACSys and its optional GUI uses PyQt6; both are examples you can customize. Use the `cli` workflow variant for a headless app or `gui-xpra` if your app needs this desktop access; see [CI and deployment](deployment.md#deploy-your-application-step-by-step).
 
-## Images and build targets (optional local builds)
+## Optional: check your app in a local image
 
 [`Dockerfile`](../Dockerfile) defines two deployable targets and their build stages:
 
@@ -15,14 +15,7 @@ A **CLI image** runs a command-line/headless program and prints output to its co
 | `runtime` | [`make build`](../Makefile) | `ap-python-starter-kit` | CLI launcher, no browser service |
 | `xpra-runtime` | [`make build-gui`](../Makefile) | `ap-python-starter-kit-gui` | PyQt GUI through Xpra's HTML5 client |
 
-The CLI target uses AlmaLinux and installs the package without the optional PyQt extra. The Xpra target uses the external `adregistry.fnal.gov/dev-containers/ap-python-xpra-base` image for both build and runtime, installs the package with the `gui-pyqt` extra, and starts via [`docker/start.sh`](../docker/start.sh). These are **template defaults**; update the startup command for your app and add other dependencies as needed before testing its image. Building needs access to the selected base image and package dependencies (the template includes an [ACSys Git dependency](../pyproject.toml)). [`make build-no-cache`](../Makefile) rebuilds only the CLI target without cache. To change local image tags, set `IMAGE_NAME` or `IMAGE_NAME_GUI` when invoking make; [`make clean`](../Makefile) removes the images under the selected tags.
-
-```bash
-make build
-make build-gui
-```
-
-The [CI workflow](../.github/workflows/ci-cd.yaml) defaults to `gui-xpra` and delegates delivery to a maintained reusable workflow; local Make commands do **not** publish or deploy images. Follow [CI and deployment](deployment.md) for the normal release path and required admin-managed Harbor access.
+Choose **one** image for your app: run `make build` for the CLI target or `make build-gui` for the Xpra GUI target. The template's startup commands point to its example app; the rename script updates the original module names, but if you change the entry point, [update startup](application.md#replace-the-example-step-by-step) before building. The Xpra target uses an externally maintained base image. Local Make commands do **not** publish or deploy images; use [CI and deployment](deployment.md) for that.
 
 ## Optional: run the CLI image
 
@@ -30,15 +23,9 @@ The [CI workflow](../.github/workflows/ci-cd.yaml) defaults to `gui-xpra` and de
 make run
 ```
 
-After building the CLI image, [`make run`](../Makefile) starts a disposable container named `ap-python-starter-kit` by default. The template's fixed [`runtime` entrypoint](../Dockerfile) runs `python -m ap_python_starter_kit.main`: the unmodified demo queries ACSys and prints five readings, which requires ACSys access and any applicable site authentication. For your app, update the entrypoint to launch your code. There is no browser port.
+After building the CLI image, [`make run`](../Makefile) starts the command-line app. The unmodified demo queries ACSys and prints five readings, so it needs ACSys access and any applicable site authentication. There is no browser port. If you changed the module rather than just its contents, check the [startup command](application.md#replace-the-example-step-by-step).
 
-**CLI override limitation:** Although make passes `APP_CMD` as an environment variable if supplied, the CLI entrypoint does not read it. `make run APP_CMD="..."` therefore still runs the fixed launcher. To run a different command in the built image, override the entrypoint explicitly, for example:
-
-```bash
-docker run --rm --entrypoint python ap-python-starter-kit -m ap_python_starter_kit.main --help
-```
-
-For local application commands instead, use the [development workflow](development.md#a-normal-edit-and-check-cycle). To make `APP_CMD` control the CLI image, change the [`runtime` entrypoint](../Dockerfile) in your project; the environment setting alone is insufficient.
+For a different CLI command in the container, see [advanced image settings](#advanced-local-image-settings). For day-to-day runs, use the [development workflow](development.md#a-normal-edit-and-check-cycle).
 
 ## Optional: run the browser-served GUI image
 
@@ -46,7 +33,19 @@ For local application commands instead, use the [development workflow](developme
 make run-gui
 ```
 
-After building the GUI image, [`make run-gui`](../Makefile) starts the Xpra container (default name `ap-python-starter-kit-xpra`), publishes host port `14500` to container port `14500`, and sets `XPRA_BIND_HOST` to `0.0.0.0` by default. Open `http://localhost:14500/` in a browser while it runs. This is a browser view of the window running in the container, **not** a web-native app or the [development desktop](devpod.md#desktop-access). The CLI image serves no HTML. See the [security warning](#xpra-lifecycle-and-security) before exposing this port.
+After building the GUI image, [`make run-gui`](../Makefile) starts the Xpra desktop on `http://localhost:14500/`. Open that URL while the container runs. This is a browser view of the app's window in the container, **not** a web-native app or the [development desktop](devpod.md#desktop-access). **The default browser endpoint has no authentication and the Make target publishes the port on all host interfaces; do not expose it to an untrusted network.** See [Xpra security and a local-only binding](#xpra-lifecycle-and-security).
+
+## Advanced: local image settings
+
+The CLI target uses AlmaLinux and installs the package without the optional PyQt extra. The GUI target uses the external `adregistry.fnal.gov/dev-containers/ap-python-xpra-base` image, installs the `gui-pyqt` extra, and starts via [`docker/start.sh`](../docker/start.sh). Builds need access to the selected base image and dependencies, including the template's [ACSys Git dependency](../pyproject.toml). [`make build-no-cache`](../Makefile) rebuilds only the CLI image without cache. You can set `IMAGE_NAME` or `IMAGE_NAME_GUI` for local image tags; [`make clean`](../Makefile) removes images under the selected tags.
+
+**CLI override limitation:** Although make passes `APP_CMD` as an environment variable if supplied, the CLI [`runtime` entrypoint](../Dockerfile) does not read it. To run a different command in the built image, override the entrypoint explicitly:
+
+```bash
+docker run --rm --entrypoint python ap-python-starter-kit -m ap_python_starter_kit.main --help
+```
+
+To make `APP_CMD` control the CLI image, change the entrypoint in your project; setting the environment variable alone is insufficient.
 
 The [`xpra-runtime` image](../Dockerfile) exposes port `14500`, has a health check against `http://localhost:14500/`, and runs as `pyuser` in `/home/pyuser`. Its [startup script](../docker/start.sh) defaults to `python -m ap_python_starter_kit.main --gui`. Xpra starts `openbox` and the configured application, writes the app and Xpra logs to `/tmp/app.log` and `/tmp/xpra.log` by default, and streams both logs to container stdout.
 
@@ -86,7 +85,7 @@ docker run --rm -p 127.0.0.1:14500:14500 ap-python-starter-kit-gui
 
 For a release, use the [provided deployment process](deployment.md); do not assume this local unauthenticated mapping is safe for other users. Xpra authentication is separate from [Kerberos configuration and runtime tickets](kerberos.md).
 
-## Open an image shell
+### Open an image shell
 
 ```bash
 make shell

@@ -1,6 +1,6 @@
 # Everyday development
 
-Use this guide after the [Quickstart](quickstart.md) has helped you create, rename, and check your repository. You are building **your own application**, not maintaining the sample ACSys/PyQt program. The [application guide](application.md#replace-the-example-step-by-step) shows how to customize the examples. Run the commands below in a terminal at the root of **your repository**, preferably in the [DevPod workspace](devpod.md). A manually prepared host environment needs Python 3.12+ and `uv`.
+Use this guide after the [Quickstart](quickstart.md) has helped you create, rename, and check your repository. You are building **your own application**, not maintaining the sample ACSys/PyQt program. The [application guide](application.md#replace-the-example-step-by-step) shows how to customize the examples. Run the commands below in a terminal at the root of **your repository**. The [DevPod workspace](devpod.md) is the supported path to a common set of tools and a setup like the one used for integration; a manually prepared host environment needs Python 3.12+ and `uv` and must keep the same project checks working.
 
 ## A normal edit-and-check cycle
 
@@ -20,6 +20,12 @@ uv sync --dev
 ```
 
 If your app keeps the optional sample PyQt extra and you need it outside DevPod's all-extras setup, run `uv sync --dev --extra gui-pyqt` instead. Syncing the template requires access to the ACSys Git source declared in [`pyproject.toml`](../pyproject.toml), even when you change the demo code. Review and commit changes to both [`pyproject.toml`](../pyproject.toml) and [`uv.lock`](../uv.lock) after dependency changes. The repository's [`make uv-sync`](../Makefile) is a shortcut for plain `uv sync`; it does not select the GUI extra.
+
+## Stay compatible with integration
+
+The [provided CI workflow](../.github/workflows/ci-cd.yaml) calls a reusable integration workflow maintained outside this repository. That workflow expects to invoke uv commands against **your repository**. Keep a valid [`pyproject.toml`](../pyproject.toml) with the correct package, installed command, and declared dependencies, and commit the corresponding [`uv.lock`](../uv.lock) after dependency changes. Keep your source package installable and the tests in [`tests/`](../tests/) runnable with `uv run pytest`; use the checks below before opening a PR. Do not replace the uv project with an environment that only works on your laptop or remove its configuration because DevPod already supplies tools.
+
+DevPod runs `uv sync --dev --all-extras` at startup, so if you change dependencies or extras, make sure that sync still succeeds. A successful local check does not guarantee the externally maintained workflow will pass; read the actual PR results in GitHub Actions and fix any failures. You do not need to edit or maintain the reusable workflow or the common development image.
 
 ## Tests and code quality
 
