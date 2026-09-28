@@ -1,6 +1,6 @@
 # Bring an existing Python app into this template
 
-Already have an app? Create **your own repository from the template**, then adapt the included ACSys demo CLI and optional PyQt window to your code. The example's device, arguments, and window are not requirements for your project. You do **not** need to migrate from `pip` or PyQt5 unless your existing app uses them. Use [Quickstart](quickstart.md) to set up and rename the repository, [Make the template your application](application.md#replace-the-example-step-by-step) for the starter code, and [CI and deployment](deployment.md) when you are ready to deliver through the maintained workflows.
+Already have an app? Create **your own repository from the template**, then adapt the included ACSys demo CLI and optional PyQt window to your code. Replace the example's device, arguments, and window as needed for your project. The migration notes for `pip` and PyQt5 below apply if your existing app uses them. Use [Quickstart](quickstart.md) to set up and rename the repository, [Make the template your application](application.md#replace-the-example-step-by-step) for the starter code, and [CI and deployment](deployment.md) when you are ready to deliver through the maintained workflows.
 
 ## Bring in your application
 
@@ -13,7 +13,7 @@ Already have an app? Create **your own repository from the template**, then adap
 
 ## Only if your existing app uses pip requirements
 
-`pip` installs packages into an environment; the template instead records dependencies in [`pyproject.toml`](../pyproject.toml) and resolved versions in [`uv.lock`](../uv.lock). The recommended [DevPod workspace](devpod.md) supplies `uv`. If your old app has a requirements file, first choose the additional packages your app uses. From the repository root, `uv add -r path/to/requirements.txt` adds entries from that file (substitute its actual path). Check what it added and account for any private package sources, native libraries, or version constraints. Run `uv sync --dev` and `uv run <your-command>` to try the resulting installation; you do not need to activate an environment manually for `uv run`. Commit both dependency files after checking them. Keep the old requirements file if other tooling still uses it; see [Dependencies and environment](development.md#dependencies-and-environment).
+The template records dependencies in [`pyproject.toml`](../pyproject.toml) and resolved versions in [`uv.lock`](../uv.lock). The recommended [DevPod workspace](devpod.md) supplies `uv`. If your old app has a requirements file, first choose the additional packages your app uses. From the repository root, `uv add -r path/to/requirements.txt` adds entries from that file (substitute its actual path). Check what it added and account for any private package sources, native libraries, or version constraints. Run `uv sync --dev` and `uv run <your-command>` to try the resulting installation; `uv run` handles the environment automatically. Commit both dependency files after checking them. Keep the old requirements file if other tooling still uses it; see [Dependencies and environment](development.md#dependencies-and-environment).
 
 ## Only if you choose to move a PyQt5 app to PyQt6
 

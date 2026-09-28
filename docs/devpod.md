@@ -2,7 +2,7 @@
 
 DevPod opens **your repository** in a development container in VS Code, so you can edit and test your application without installing its Python dependencies directly on your host. This is the supported way to use a common set of tools and reproduce the project's uv-based setup before maintainer-run integration. You may edit code outside DevPod, but your repository must remain installable and checkable with uv; a different editor or host environment does not change that requirement. Start with [Create a repository](quickstart.md#1-create-a-repository-from-the-template); after opening the workspace, return to the [rename step](quickstart.md#3-rename-the-project).
 
-The [dev-container configuration](../.devcontainer/devcontainer.json) points to `adregistry.fnal.gov/dev-containers/ap-python:latest`, an **external image maintained for you**, not built from this repository's [`Dockerfile`](../Dockerfile). You do **not** need to build, update, or maintain that development image. You do need access to pull it. The configuration also adds an external desktop feature and runs `uv sync --dev --all-extras && uv run pre-commit install` at workspace start. The first sync needs access to the template's [ACSys Git dependency](../pyproject.toml). Keep the [project configuration and lockfile](development.md#stay-compatible-with-integration) usable by uv and check your changes locally; the maintained integration workflow runs separately on GitHub. The separate images used to deliver your app are described in [CI and deployment](deployment.md) and [Container usage](container.md).
+The [dev-container configuration](../.devcontainer/devcontainer.json) points to `adregistry.fnal.gov/dev-containers/ap-python:latest`, an **externally maintained development image**. Your repository's [`Dockerfile`](../Dockerfile) defines deployment images instead. You need access to pull the development image, but you do not need to build or maintain it. The configuration also adds an external desktop feature and runs `uv sync --dev --all-extras && uv run pre-commit install` at workspace start. The first sync needs access to the template's [ACSys Git dependency](../pyproject.toml). Keep the [project configuration and lockfile](development.md#stay-compatible-with-integration) usable by uv and check your changes locally; the maintained integration workflow runs separately on GitHub. The images used to deliver your app are described in [CI and deployment](deployment.md) and [Container usage](container.md).
 
 ## Install the host tools
 
@@ -30,7 +30,7 @@ podman version
 
 ## Start a workspace
 
-1. In DevPod, create a workspace from **your new repository's URL** or its local clone, not the original template URL.
+1. In DevPod, create a workspace from **your new repository's URL** or its local clone.
 2. Select the **Docker** provider. On Windows with Podman, the documented provider advanced settings are **Host** `tcp://127.0.0.1:2375` and **Docker Path** `podman`. This only works if your local Podman service is configured and running at that address; verify the host connection if DevPod cannot reach it. Do not expose an unauthenticated TCP endpoint to a network.
 3. Select **VS Code** as the IDE and create/open the workspace. DevPod pulls the external development image and starts the container using the [descriptor](../.devcontainer/devcontainer.json). The first start may take longer while dependencies install. If it fails, read the startup logs and check access to the image and the ACSys Git source; you are not expected to fix the image itself.
 4. In the VS Code workspace terminal, check the installed example command without connecting to ACSys:
@@ -53,7 +53,7 @@ To inspect the *template's optional PyQt example* in that desktop, run in the wo
 uv run ap-python-starter-kit --gui
 ```
 
-After renaming, use your actual command name. The workspace startup installs all extras, including PyQt; if you are working outside that setup, install the extra with `uv sync --extra gui-pyqt`. This demo also tries to read ACSys, so it needs appropriate access. Your own application does **not** have to use PyQt or the desktop feature. This desktop is not a web-native app or the separate Xpra delivery image; see [Make the template your application](application.md#make-the-template-your-application) and [CI and deployment](deployment.md) for those choices.
+After renaming, use your actual command name. The workspace startup installs all extras, including PyQt; if you are working outside that setup, install the extra with `uv sync --extra gui-pyqt`. This demo also tries to read ACSys, so it needs appropriate access. Your application can use another toolkit or run without a desktop. This development desktop runs in DevPod; for the browser-served Xpra delivery image, see [Make the template your application](application.md#make-the-template-your-application) and [CI and deployment](deployment.md).
 
 ## Windows troubleshooting
 

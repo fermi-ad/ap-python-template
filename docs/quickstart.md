@@ -1,12 +1,12 @@
 # Quickstart: make this template your application
 
-This repository is a starting point, not the finished application. You will create **your own repository**, open a prepared development workspace, rename the package, check the included example, and then customize it with your code. The example CLI queries ACSys and has an optional PyQt window; those demo behaviors are not requirements. Use the provided [deployment guide](deployment.md) when you are ready to deliver your app through the maintained workflows.
+Use this repository as a starting point for **your own application**. Create a repository from the template, open a prepared development workspace, rename the package, check the included example, and then customize it with your code. The example CLI queries ACSys and has an optional PyQt window; your app can use different libraries or run without a GUI. Use the provided [deployment guide](deployment.md) when you are ready to deliver your app through the maintained workflows.
 
-Run the commands below in a terminal at the root of **your new repository**. [DevPod setup](devpod.md) is the supported way to use the common development tools and check the uv project before integration. You can write code elsewhere, but your repository must still support the maintainer-run integration workflow's uv-based installation and checks; see [Everyday development](development.md#stay-compatible-with-integration). Setting up a host Python environment yourself is an advanced alternative, not a different project setup.
+Run the commands below in a terminal at the root of **your new repository**. [DevPod setup](devpod.md) is the supported way to use the common development tools and check the uv project before integration. You can write code elsewhere, but your repository must still support the maintainer-run integration workflow's uv-based installation and checks; see [Everyday development](development.md#stay-compatible-with-integration). If you set up a host Python environment yourself, keep the same project configuration and checks working.
 
 ## 1. Create a repository from the template
 
-On the [template's GitHub page](https://github.com/fermi-ad/ap-python-template), select **Use this template → Create a new repository**. Choose a repository name and visibility, then create it. Copy the URL of your **new** repository. Do not develop by editing the original template repository.
+On the [template's GitHub page](https://github.com/fermi-ad/ap-python-template), select **Use this template → Create a new repository**. Choose a repository name and visibility, then create it. Copy the URL of your **new** repository and use it for development.
 
 ## 2. Open your workspace
 
@@ -37,7 +37,7 @@ Replace `my-project` with the command actually shown in your [`pyproject.toml`](
 uv run my-project
 ```
 
-The **template example** requests `G:SCTIME@P,15H` and prints five readings. A failed live query does not necessarily mean your workspace is broken; it may simply lack ACSys connectivity or credentials. Do not treat this sample request as a requirement for your own program. The sample PyQt window is optional; see [desktop access](devpod.md#desktop-access) if you want to inspect it.
+The **template example** requests `G:SCTIME@P,15H` and prints five readings. If a live query fails, check ACSys connectivity and credentials before troubleshooting the workspace. Replace the sample request with one that suits your program. The sample PyQt window is optional; see [desktop access](devpod.md#desktop-access) if you want to inspect it.
 
 ## 5. Replace the example with your application
 

@@ -4,7 +4,7 @@
 
 Use the commands here only to check container startup or troubleshoot an image-specific problem. They require a working Docker engine, access to the base images and dependencies, and a terminal at your repository root. These deployment images are separate from the DevPod development workspace and its desktop on port 6080. See [advanced image settings](#advanced-local-image-settings) only if the basic checks are insufficient.
 
-A **CLI image** runs a command-line/headless program and prints output to its container logs; it does not provide a browser page. A **GUI image** uses Xpra to show a running desktop window in a browser: the app still runs in the container, not as a native website. The untouched template's CLI queries ACSys and its optional GUI uses PyQt6; both are examples you can customize. Use the `cli` workflow variant for a headless app or `gui-xpra` if your app needs this desktop access; see [CI and deployment](deployment.md#deploy-your-application-step-by-step).
+A **CLI image** runs a command-line/headless program and prints output to its container logs. A **GUI image** uses Xpra to show a running desktop window in a browser; the app runs inside the container. The untouched template's CLI queries ACSys and its optional GUI uses PyQt6; both are examples you can customize. Use the `cli` workflow variant for a headless app or `gui-xpra` if your app needs browser access to a desktop window; see [CI and deployment](deployment.md#deploy-your-application-step-by-step).
 
 ## Optional: check your app in a local image
 
@@ -33,7 +33,7 @@ For a different CLI command in the container, see [advanced image settings](#adv
 make run-gui
 ```
 
-After building the GUI image, [`make run-gui`](../Makefile) starts the Xpra desktop on `http://localhost:14500/`. Open that URL while the container runs. This is a browser view of the app's window in the container, **not** a web-native app or the [development desktop](devpod.md#desktop-access). **The default browser endpoint has no authentication and the Make target publishes the port on all host interfaces; do not expose it to an untrusted network.** See [Xpra security and a local-only binding](#xpra-lifecycle-and-security).
+After building the GUI image, [`make run-gui`](../Makefile) starts the Xpra desktop on `http://localhost:14500/`. Open that URL while the container runs. Xpra displays the app's window from the deployment container; the [development desktop](devpod.md#desktop-access) runs in DevPod. **The default browser endpoint has no authentication and the Make target publishes the port on all host interfaces; do not expose it to an untrusted network.** See [Xpra security and a local-only binding](#xpra-lifecycle-and-security).
 
 ## Advanced: local image settings
 
@@ -57,13 +57,13 @@ make run-gui XPRA_PORT=16000
 
 Then open `http://localhost:16000/`. `XPRA_PORT` changes the Docker port mapping only. The separate `XPRA_BIND_PORT` setting inside the startup script defaults to `14500`; if changed, update the mapping and health check accordingly. `XPRA_BIND_HOST` controls the address *inside* the container and defaults to all interfaces; binding only to container loopback may prevent Docker's published port from reaching Xpra.
 
-Unlike the CLI target, the GUI startup script **does** read `APP_CMD`. For example, to pass an application argument:
+The GUI startup script reads `APP_CMD`, so you can pass an application argument:
 
 ```bash
 make run-gui APP_CMD="python -m ap_python_starter_kit.main --gui --device G:SCTIME@P,15H"
 ```
 
-The script passes this value through a shell to Xpra's `--start-child`; keep overrides to trusted, properly quoted commands. For project-wide changes after renaming or replacing the app, edit the [script's default command](../docker/start.sh) and rebuild the GUI image. `make run-gui` forwards `APP_CMD` and `XPRA_BIND_HOST`, but not the script's other Xpra settings; for other local overrides use a direct Docker invocation. The [application guide](application.md#replace-the-example-step-by-step) describes replacing the sample application.
+The script passes this value through a shell to Xpra's `--start-child`; keep overrides to trusted, properly quoted commands. For project-wide changes after renaming or replacing the app, edit the [script's default command](../docker/start.sh) and rebuild the GUI image. `make run-gui` forwards `APP_CMD` and `XPRA_BIND_HOST`. To override other script settings locally, invoke Docker directly. The [application guide](application.md#replace-the-example-step-by-step) describes replacing the sample application.
 
 ### Xpra lifecycle and security
 
