@@ -427,6 +427,34 @@ def test_main_applies_changes(tmp_repo: Path, monkeypatch: pytest.MonkeyPatch) -
     assert TEMPLATE_PROJECT not in content
 
 
+def test_main_updates_developer_guides(tmp_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    guide_names = (
+        "application.md",
+        "container.md",
+        "development.md",
+        "devpod.md",
+        "kerberos.md",
+    )
+    docs_dir = tmp_repo / "docs"
+    docs_dir.mkdir()
+    template_docs = Path(__file__).resolve().parents[1] / "docs"
+    for name in guide_names:
+        (docs_dir / name).write_text((template_docs / name).read_text(encoding="utf-8"))
+
+    monkeypatch.setattr("scripts.rename_project.REPO_ROOT", tmp_repo)
+    monkeypatch.chdir(tmp_repo)
+    assert main(_main_args(tmp_repo)) == 0
+
+    for name in guide_names:
+        guide = (docs_dir / name).read_text(encoding="utf-8")
+        assert TEMPLATE_MODULE not in guide, name
+        assert TEMPLATE_CLI not in guide, name
+        if name in {"application.md", "kerberos.md"}:
+            assert "../src/my_project/" in guide
+        if name in {"development.md", "devpod.md"}:
+            assert "uv run my-project" in guide
+
+
 def test_main_renames_package_dir(tmp_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("scripts.rename_project.REPO_ROOT", tmp_repo)
     monkeypatch.chdir(tmp_repo)

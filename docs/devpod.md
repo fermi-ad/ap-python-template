@@ -1,131 +1,69 @@
-# DevPod
+# DevPod and the development container
 
-This repo includes a dev container descriptor at [`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json).
-The workspace uses the external image referenced there, which is expected to provide Python 3.12 and `uv`.
+DevPod opens **your repository** in a development container in VS Code, so you can edit and test your application without installing its Python dependencies directly on your host. This is the supported way to use a common set of tools and reproduce the project's uv-based setup before maintainer-run integration. You may edit code outside DevPod, but your repository must remain installable and checkable with uv; a different editor or host environment does not change that requirement. Start with [Create a repository](quickstart.md#1-create-a-repository-from-the-template); after opening the workspace, return to the [rename step](quickstart.md#3-rename-the-project).
 
-## What you get
+The [dev-container configuration](../.devcontainer/devcontainer.json) points to `adregistry.fnal.gov/dev-containers/ap-python:latest`, an **externally maintained development image**. Your repository's [`Dockerfile`](../Dockerfile) defines deployment images instead. You need access to pull the development image, but you do not need to build or maintain it. The configuration also adds an external desktop feature and runs `uv sync --dev --all-extras && uv run pre-commit install` at workspace start. The first sync needs access to the template's [ACSys Git dependency](../pyproject.toml). Keep the [project configuration and lockfile](development.md#stay-compatible-with-integration) usable by uv and check your changes locally; the maintained integration workflow runs separately on GitHub. The images used to deliver your app are described in [CI and deployment](deployment.md) and [Container usage](container.md).
 
-- Python 3.12 + `uv` in a workspace container
-- The repository itself provides:
-  - dependency management via `uv sync`
-  - test and lint commands documented in [`Makefile`](Makefile)
-  - project renaming via [`scripts/rename_project.py`](scripts/rename_project.py)
-  - documentation content under [`docs/`](docs/)
-- Some workspace images may also provide convenience shell aliases such as `test`, `lint`, `format`, `run`, or `docs-serve`
-  - those conveniences come from the external image or workspace environment, not from files tracked in this repository
-  - if those aliases are unavailable in your workspace, run the underlying commands directly instead
+## Install the host tools
 
-## Use
+1. Install [VS Code](https://code.visualstudio.com/download) and the **Dev Containers** extension. On Windows, also install the **WSL** extension.
+2. Install [DevPod](https://devpod.sh/docs/getting-started/install#install-devpod).
+3. Have a running Docker-compatible container engine that DevPod can use:
+   - **macOS:** Install and start [OrbStack](https://orbstack.dev/download), then select DevPod's Docker provider.
+   - **Windows:** Install WSL and Podman Desktop using the [Windows steps](#windows-host-setup) below.
+   - **Linux:** Use a running Docker-compatible engine and select the Docker provider. The repository does not install a host engine.
 
-### Setup
+### Windows host setup
 
-1. Ensure [VS Code is set up](#vs-code). This includes installing some necessary extensions, listed in the instructions.
-2. Prepare your machine
-    - [Mac](#mac)
-    - [Windows](#windows)
-3. On your local machine, [install DevPod](https://devpod.sh/docs/getting-started/install#install-devpod).
-4. Open DevPod and enter the URL of your project's GitHub repository, or point it to the local directory if you've already cloned the repo.
-5. Select Docker as the "Provider"
-    - If on Windows, edit the advanced options to specify the "Host" as `tcp://127.0.0.1:2375` and change "Docker Path" to "podman".
-6. Select VS Code as your IDE
-7. Click Create - the dev container will be pulled down and started for you, and VS Code should open
-    - If you have trouble with this step on Windows, see [Troubleshooting DevPod on Windows](#troubleshooting-devpod-on-windows)
-8. After the workspace starts, open a terminal in VS Code and run
-    ```bash
-    uv sync --dev --all-extras
-    ```
-9. Run tests
-    ```bash
-    uv run pytest
-    ```
-10. (Optional) Run the GUI
-    1. [Set up access to the container's desktop](#ui-development-after-setup-is-complete)
-    2. Run
-        ```bash
-        uv run ap-python-starter-kit
-        ```
+In an elevated PowerShell terminal, install and update WSL (restart if prompted):
 
-### Prerequisites
-
-#### VS Code
-
-1. [Install VS Code](https://code.visualstudio.com/download)
-2. Open VS Code and navigate to the Extensions tab (icon looks like four squares, where the top-right square is rotated 45 degrees)
-3. In the search bar at the top, type "Dev Containers" and install the extension from Microsoft
-4. (Windows-only) Do the same as step 3, searching for and installing the "WSL" extension (also by Microsoft)
-
-#### Mac
-
-Mac users will run containers using the Docker-compatible [OrbStack](https://orbstack.dev/).
-
-1. [Install OrbStack](https://orbstack.dev/download)
-2. Start OrbStack by opening the app, or run in a terminal:
-    ```bash
-    orb start
-    ```
-3. During DevPod setup, follow the instructions for using Docker as your provider. OrbStack will be substituted by DevPod automatically.
-
-#### Windows
-
-If your local machine is running Windows, you will need to have Podman installed and set up to use Windows Subsystem for Linux as its unix runtime host.
-
-1. Run the following in a terminal with administrator rights (you may be asked to restart your machine)
-    ```PowerShell
-    wsl --install --no-distribution
-    ```
-2. Ensure WSL has the latest kernel by running
-    ```PowerShell
-    wsl --update
-    ```
-3. Install Podman Desktop on Windows:
-    - Download and install Podman Desktop: <https://podman-desktop.io/downloads/windows>
-    - Open Podman Desktop after installing so it can finish first-time setup. It will walk you through creating a Podman Machine. Be sure to select the WSL2 integration during this step.
-4. Verify Podman is installed:
-    ```PowerShell
-    podman version
-    ```
-
-### UI development (After setup is complete)
-
-While building your app, you'll probably want to test out changes to the UI before deploying. In the container, this requires one preliminary step.
-
-The development container comes with a minimal desktop overlay, in which your app will run when you kick it off. To see it, do the following:
-
-1. In VS Code, go to the "Ports" tab of the bottom panel (toggle the panel with the appropriate button in the very top-right if it is not already visible)
-2. Click the "Forward a Port" button
-3. Type `6080` and hit Enter
-4. If it doesn't open automatically, go to your web browser and navigate to `localhost:6080`
-5. Click "Connect"
-
-You're all set! Now when you run the app locally, it will come up in your web browser at `localhost:6080`.
-
-## Notes
-
-- The template placeholders (`ap-python-starter-kit`, `ap_python_starter_kit`, and similar values) are expected to be replaced when you generate a real project from this template.
-  - The provided [`scripts/rename_project.py`](scripts/rename_project.py) command should do this for you.
-- If your DevPod or dev container image defines shell aliases that reference the placeholder project name, update that environment after renaming the project.
-- This workspace intentionally uses an external dev container image for fast startup.
-  - The repo's Docker-based workflow is still available in [`docs/container.md`](docs/container.md) for building runnable images and the optional browser-served GUI (Xpra HTML) target.
-
-### Troubleshooting DevPod on Windows
-
-After applying any of these fixes, be sure to fully stop Podman and DevPod (making sure their icons are not still present in the taskbar hidden icons menu) restart them, and then create a new DevPod workspace from scratch (starting from [step 4](#setup) above)
-
-#### `podman` binary not found in `%PATH%` during DevPod workspace build
-
-Run in PowerShell to extend your path, replacing `[your user]` with your username:
-
-```PowerShell
-[Environment]::SetEnvironmentVariable("PATH", $env:PATH + ";C:\Users\[your user]\.local\bin", "User")
+```powershell
+wsl --install --no-distribution
+wsl --update
 ```
 
-Also try deleting any pre-existing `C:\Users\[your user]\.docker` folder, as this may interfere with the Podman configuration.
+Install [Podman Desktop for Windows](https://podman-desktop.io/downloads/windows), start it, and set up a Podman machine with WSL2 integration. Check that the Podman CLI works in PowerShell:
 
-#### VS Code fails to connect to running workspace with `Bad owner or permissions on C:\\Users\\[username]/.ssh/config` error in terminal
+```powershell
+podman version
+```
 
-Run in PowerShell to set the correct permissions for the SSH config folder:
+## Start a workspace
 
-```PowerShell
+1. In DevPod, create a workspace from **your new repository's URL** or its local clone.
+2. Select the **Docker** provider. On Windows with Podman, the documented provider advanced settings are **Host** `tcp://127.0.0.1:2375` and **Docker Path** `podman`. This only works if your local Podman service is configured and running at that address; verify the host connection if DevPod cannot reach it. Do not expose an unauthenticated TCP endpoint to a network.
+3. Select **VS Code** as the IDE and create/open the workspace. DevPod pulls the external development image and starts the container using the [descriptor](../.devcontainer/devcontainer.json). The first start may take longer while dependencies install. If it fails, read the startup logs and check access to the image and the ACSys Git source; you are not expected to fix the image itself.
+4. In the VS Code workspace terminal, check the installed example command without connecting to ACSys:
+
+   ```bash
+   uv run ap-python-starter-kit --help
+   ```
+
+   The rename script updates this example command in your copied guide; check [`[project.scripts]`](../pyproject.toml) if you change the command later. If startup dependency installation failed, resolve the reported access/setup error before retrying `uv sync --dev --all-extras` and `uv run pre-commit install`.
+
+Next, follow the [Quickstart rename and example check](quickstart.md#3-rename-the-project). Your own code, tests, and normal work belong in your new repository; the [development guide](development.md) covers that routine.
+
+## Desktop access
+
+The configured external `desktop-lite` feature offers a browser view of the **development container's desktop** on port `6080`. In VS Code's **Ports** panel, forward that port if needed and open its forwarded URL (typically `http://localhost:6080/`); select **Connect** if prompted. The [configuration](../.devcontainer/devcontainer.json) sets an empty desktop password, so keep the forwarded port local rather than publishing it.
+
+To inspect the *template's optional PyQt example* in that desktop, run in the workspace terminal:
+
+```bash
+uv run ap-python-starter-kit --gui
+```
+
+The rename script updates the command above. The workspace startup installs all extras, including PyQt; if you are working outside that setup, install the extra with `uv sync --extra gui-pyqt`. This demo also tries to read ACSys, so it needs appropriate access. Your application can use another toolkit or run without a desktop. This development desktop runs in DevPod; for the browser-served Xpra delivery image, see [Make the template your application](application.md#make-the-template-your-application) and [CI and deployment](deployment.md).
+
+## Windows troubleshooting
+
+If DevPod reports `podman` is missing from `%PATH%`, check that `podman version` succeeds in the same Windows host environment DevPod uses. Update the user PATH if needed, then restart DevPod so it sees the change. If it cannot connect, verify that the local Podman service is running and matches the selected provider Host setting.
+
+If VS Code reports `Bad owner or permissions on C:\\Users\\...\\.ssh\\config`, review your SSH access rules first, then repair your own SSH config permissions from PowerShell if appropriate:
+
+```powershell
 icacls "$env:USERPROFILE\.ssh\config" /setowner "$env:USERNAME"
 icacls "$env:USERPROFILE\.ssh\config" /inheritance:r /grant:r "${env:USERNAME}:(F)"
 ```
+
+Restart the affected workspace and host tools after resolving the host issue. Avoid removing existing host configuration without a backup.

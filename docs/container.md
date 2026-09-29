@@ -1,104 +1,95 @@
 # Container usage
 
-This template includes a Docker-based workflow with:
+**Local image builds are optional.** Develop and test your app in the [shared DevPod workspace](devpod.md) using the [development checks](development.md), then follow [CI and deployment](deployment.md) for normal delivery. You do not need to build images or manage Harbor credentials; a fermi-ad admin grants access to new repositories as described in the deployment guide.
 
-- a **CLI-first** default image for running the package launcher directly
-- an **opt-in GUI (Xpra HTML)** image target for running the integrated PyQt app in-container and viewing it in a browser
+Use the commands here only to check container startup or troubleshoot an image-specific problem. They require a working Docker engine, access to the base images and dependencies, and a terminal at your repository root. These deployment images are separate from the DevPod development workspace and its desktop on port 6080. See [advanced image settings](#advanced-local-image-settings) only if the basic checks are insufficient.
 
-## Image targets
+A **CLI image** runs a command-line/headless program and prints output to its container logs. A **GUI image** uses Xpra to show a running desktop window in a browser; the app runs inside the container. The untouched template's CLI queries ACSys and its optional GUI uses PyQt6; both are examples you can customize. Use the `cli` workflow variant for a headless app or `gui-xpra` if your app needs browser access to a desktop window; see [CI and deployment](deployment.md#deploy-your-application-step-by-step).
 
-The Dockerfile currently defines these documented runtime-oriented stages:
+## Optional: check your app in a local image
 
-- `runtime`: the default CLI image used by [`make build`](Makefile) and [`make run`](Makefile)
-- `xpra-runtime`: the browser-served GUI image used by [`make build-gui`](Makefile) and [`make run-gui`](Makefile)
+[`Dockerfile`](../Dockerfile) defines two deployable targets and their build stages:
 
-## Build (CLI)
+| Target | Make command | Default image tag | What runs |
+| --- | --- | --- | --- |
+| `runtime` | [`make build`](../Makefile) | `ap-python-starter-kit` | CLI launcher, no browser service |
+| `xpra-runtime` | [`make build-gui`](../Makefile) | `ap-python-starter-kit-gui` | PyQt GUI through Xpra's HTML5 client |
 
-```bash
-make build
-```
+Choose **one** image for your app: run `make build` for the CLI target or `make build-gui` for the Xpra GUI target. The template's startup commands point to its example app; the rename script updates the original module names, but if you change the entry point, [update startup](application.md#replace-the-example-step-by-step) before building. The Xpra target uses an externally maintained base image. Local Make commands do **not** publish or deploy images; use [CI and deployment](deployment.md) for that.
 
-## Run (CLI default)
-
-Runs the fixed CLI entrypoint defined by the `runtime` stage in [`Dockerfile`](Dockerfile):
+## Optional: run the CLI image
 
 ```bash
 make run
 ```
 
-At the moment, the CLI container starts `python -m ap_python_starter_kit.main` directly. Although [`Makefile`](Makefile) passes an `APP_CMD` environment variable into the container, the current `runtime` entrypoint does not consume it.
+After building the CLI image, [`make run`](../Makefile) starts the command-line app. The unmodified demo queries ACSys and prints five readings, so it needs ACSys access and any applicable site authentication. There is no browser port. If you changed the module rather than just its contents, check the [startup command](application.md#replace-the-example-step-by-step).
 
-## Run a custom CLI command
+For a different CLI command in the container, see [advanced image settings](#advanced-local-image-settings). For day-to-day runs, use the [development workflow](development.md#a-normal-edit-and-check-cycle).
 
-The documented [`make run`](Makefile) path does **not** currently support overriding the CLI command via `APP_CMD`.
-
-If you need to run a different CLI command locally, use the local `uv` workflow instead:
-
-```bash
-uv run ap-python-starter-kit --device "G:SCTIME@P,15H"
-```
-
-If you need containerized custom CLI execution, update the `runtime` stage in [`Dockerfile`](Dockerfile) so its entrypoint evaluates `APP_CMD`.
-
-## Build (GUI / Xpra HTML)
-
-Build the optional GUI image target (`xpra-runtime`) from [`Dockerfile`](Dockerfile):
-
-```bash
-make build-gui
-```
-
-## Run (GUI / Xpra HTML)
-
-This runs the integrated PyQt app inside the container and serves it through Xpra's built-in HTML client. This is the documented GUI deployment path for the template.
+## Optional: run the browser-served GUI image
 
 ```bash
 make run-gui
 ```
 
-Then open:
+After building the GUI image, [`make run-gui`](../Makefile) starts the Xpra desktop on `http://localhost:14500/`. Open that URL while the container runs. Xpra displays the app's window from the deployment container; the [development desktop](devpod.md#desktop-access) runs in DevPod. **The default browser endpoint has no authentication and the Make target publishes the port on all host interfaces; do not expose it to an untrusted network.** See [Xpra security and a local-only binding](#xpra-lifecycle-and-security).
 
-```text
-http://localhost:14500/
+## Advanced: local image settings
+
+The CLI target uses AlmaLinux and installs the package without the optional PyQt extra. The GUI target uses the external `adregistry.fnal.gov/dev-containers/ap-python-xpra-base` image, installs the `gui-pyqt` extra, and starts via [`docker/start.sh`](../docker/start.sh). Builds need access to the selected base image and dependencies, including the template's [ACSys Git dependency](../pyproject.toml). [`make build-no-cache`](../Makefile) rebuilds only the CLI image without cache. You can set `IMAGE_NAME` or `IMAGE_NAME_GUI` for local image tags; [`make clean`](../Makefile) removes images under the selected tags.
+
+**CLI override limitation:** Although `make` passes `APP_CMD` as an environment variable if supplied, the CLI [`runtime` entrypoint](../Dockerfile) does not read it. To run a different command in the built image, override the entrypoint explicitly:
+
+```bash
+docker run --rm --entrypoint python ap-python-starter-kit -m ap_python_starter_kit.main --help
 ```
 
-Custom port:
+To make `APP_CMD` control the CLI image, change the entrypoint in your project; setting the environment variable alone is insufficient.
+
+The [`xpra-runtime` image](../Dockerfile) exposes port `14500`, has a health check against `http://localhost:14500/`, and runs as `pyuser` in `/home/pyuser`. Its [startup script](../docker/start.sh) defaults to `python -m ap_python_starter_kit.main --gui`. Xpra starts `openbox` and the configured application, writes the app and Xpra logs to `/tmp/app.log` and `/tmp/xpra.log` by default, and streams both logs to container stdout.
+
+To select a different **host** port without changing the container's listening port:
 
 ```bash
 make run-gui XPRA_PORT=16000
 ```
 
-Custom command:
+Then open `http://localhost:16000/`. `XPRA_PORT` changes the Docker port mapping only. The separate `XPRA_BIND_PORT` setting inside the startup script defaults to `14500`; if changed, update the mapping and health check accordingly. `XPRA_BIND_HOST` controls the address *inside* the container and defaults to all interfaces; binding only to container loopback may prevent Docker's published port from reaching Xpra.
+
+The GUI startup script reads `APP_CMD`, so you can pass an application argument:
 
 ```bash
-make run-gui APP_CMD="python -m ap_python_starter_kit.gui"
+make run-gui APP_CMD="python -m ap_python_starter_kit.main --gui --device G:SCTIME@P,15H"
 ```
 
-For the Xpra image, `APP_CMD` is the supported way to replace the default GUI command that [`docker/start.sh`](docker/start.sh) launches. This override support is specific to the Xpra path and does not apply to the CLI [`runtime`](Dockerfile:62) stage.
+The script passes this value through a shell to Xpra's `--start-child`; keep overrides to trusted, properly quoted commands. For project-wide changes after renaming or replacing the app, edit the [script's default command](../docker/start.sh) and rebuild the GUI image. `make run-gui` forwards `APP_CMD` and `XPRA_BIND_HOST`. To override other script settings locally, invoke Docker directly. The [application guide](application.md#replace-the-example-step-by-step) describes replacing the sample application.
 
-### Configure Xpra lifecycle behavior
+### Xpra lifecycle and security
 
-The Xpra lifecycle settings are defined near the top of [`docker/start.sh`](docker/start.sh), alongside the other variables developers may want to change:
+The [startup script](../docker/start.sh) supports these environment overrides (shown with defaults):
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `XPRA_EXIT_WITH_CHILDREN` | `yes` | Request Xpra shutdown when its launched children exit. |
+| `XPRA_EXIT_WITH_WINDOWS` | `yes` | Request shutdown when no application windows remain. |
+| `XPRA_SERVER_IDLE_TIMEOUT` | `300` | Idle-server timeout in seconds. |
+
+The startup script also accepts `APP_NAME` (session name), `XPRA_DISPLAY` (default `:100`), `XPRA_HTML` (default `on`), `XPRA_BIND_HOST` (default `0.0.0.0`), `XPRA_BIND_PORT` (default `14500`), and `XPRA_AUTH` (default `none`). It creates writable runtime directories under `/tmp` by default; see the [configuration block](../docker/start.sh) for log and directory path overrides. It waits for the HTML endpoint to become ready and stops Xpra on container shutdown. These settings are script/runtime options, not additional `make` arguments unless explicitly forwarded by the recipe.
+
+**Do not publish the default GUI port to an untrusted network.** Xpra defaults to `XPRA_AUTH=none` (no authentication), serves HTML, and listens on all container interfaces; the default [`make run-gui` port mapping](../Makefile) does not restrict the *host* interface. For local-only access, use an explicit loopback host-port binding instead of that `make` recipe, for example:
 
 ```bash
-XPRA_EXIT_WITH_CHILDREN="${XPRA_EXIT_WITH_CHILDREN:-yes}"
-XPRA_EXIT_WITH_WINDOWS="${XPRA_EXIT_WITH_WINDOWS:-yes}"
-XPRA_SERVER_IDLE_TIMEOUT="${XPRA_SERVER_IDLE_TIMEOUT:-300}"
+docker run --rm -p 127.0.0.1:14500:14500 ap-python-starter-kit-gui
 ```
 
-- `XPRA_EXIT_WITH_CHILDREN` stops Xpra when the launched application process exits.
-- `XPRA_EXIT_WITH_WINDOWS` stops Xpra when the application has no windows left open.
-- `XPRA_SERVER_IDLE_TIMEOUT` controls how many seconds Xpra can remain idle before stopping.
+For a release, use the [provided deployment process](deployment.md); do not assume this local unauthenticated mapping is safe for other users. Xpra authentication is separate from [Kerberos configuration and runtime tickets](kerberos.md).
 
-Edit the defaults in [`docker/start.sh`](docker/start.sh) for a project-wide change, or provide the variables through the deployment environment. The current `make run-gui` target does not forward these variables as make arguments.
-
-Security note:
-
-- Xpra HTML is configured with `--auth=none` (no password). Do not expose this port publicly.
-
-## Shell
+### Open an image shell
 
 ```bash
 make shell
 make shell-gui
 ```
+
+These [Make targets](../Makefile) start disposable interactive containers with `/bin/bash` instead of the normal entrypoints; `make shell-gui` does **not** start Xpra. Image tags can be customized with `IMAGE_NAME` and `IMAGE_NAME_GUI`; `CONTAINER_NAME` controls the default name for `make run` (and its `-xpra` suffix for `make run-gui`), not the shell targets. For the CLI image's Kerberos packages and configuration, see [Kerberos defaults](kerberos.md).

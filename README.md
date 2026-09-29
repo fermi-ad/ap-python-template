@@ -1,129 +1,29 @@
 # AP Python Template
 
-A Python-first project template with one installable application package that provides a default CLI experience and an optional PyQt GUI activated through the same launcher, plus built-in Kerberos-aware container support for `FNAL.GOV` environments.
+This Python 3.12+ repository is a **template for your own application**. Create a new repository from it, rename the starter package, and **customize the sample code and tests for your program**. The sample query and CLI use ACSys, which is included as a normal dependency; the PyQt6 window (`--gui`) is optional. Your app can use different libraries and does not need a GUI.
 
-## Quickstart
+**Normal delivery uses the provided GitHub workflows.** You choose a CLI or browser-served Xpra GUI image for *your* app; the workflows delegate checks and delivery to externally maintained reusable workflows. You do **not** need to build images locally, manage Harbor credentials, or operate shared Docker/Harbor infrastructure. Before delivery from a new repository, ask a fermi-ad admin to attach the GitHub App with Harbor secrets to it. **See [CI and deployment: step-by-step instructions and Harbor access contacts](docs/deployment.md#deploy-your-application-step-by-step)** for the request, names, and email addresses.
 
-1. **Do not** clone this repo! Instead, click "**Use this template**" at the top right of its GitHub page, then click "**Create a new repository**" and complete the form to create a new repo using this template.
+## Start here
 
-2. [Set up your development environment](docs/devpod.md)
-
-3. Rename the template to make it your own project:
+1. Select **Use this template → Create a new repository** above, then develop in the repository you create.
+2. Open your repository in DevPod using the [workspace setup guide](docs/devpod.md#start-a-workspace). Its development image is maintained externally and supplies the common tools used to check your app. Keep the project's uv configuration working so the maintainer-run integration workflow can install and check it; you do not maintain the image or the workflow.
+3. In the workspace terminal, check the example command without connecting to ACSys:
 
    ```bash
-   python3 scripts/rename_project.py
+   uv run ap-python-starter-kit --help
    ```
 
-4. Code away!
+   If you have already renamed the project, use the command listed under `pyproject.toml`'s `[project.scripts]` instead. To try the sample CLI, run that command without `--help`; it requests five ACSys readings and needs connectivity and any applicable authentication. The optional `--gui` mode also uses ACSys. A failed live query may simply mean you lack connectivity or credentials.
+4. Follow the [Quickstart](docs/quickstart.md) to rename and sync your project, then [replace the example with your application](docs/application.md#replace-the-example-step-by-step). Use the renamed command shown in your project's `pyproject.toml`, revise the tests, and use the [deployment steps](docs/deployment.md) when your app is ready.
 
-Detailed onboarding is in [`docs/quickstart.md`](docs/quickstart.md).
+## Guides
 
-## DevPod / Dev Container
-
-This repo includes a Dev Container descriptor file at [`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json). It is recommended to [install DevPod](https://devpod.sh/docs/getting-started/install) so that you can take advantage of the prebuilt development environment it provides.
-
-Read more about DevPod [here](https://devpod.sh/docs/what-is-devpod)
-
-Full instructions: [`docs/devpod.md`](docs/devpod.md).
-
-## Application Modes
-
-The template ships as one installable package under [`src/ap_python_starter_kit/`](src/ap_python_starter_kit/) with a single console script, [`ap-python-starter-kit`](pyproject.toml:21).
-
-- [`ap_python_starter_kit.main`](src/ap_python_starter_kit/main.py) provides the top-level launcher.
-- [`ap_python_starter_kit.gui`](src/ap_python_starter_kit/gui.py) provides the optional PyQt GUI implementation invoked by the launcher when `--gui` is supplied.
-- [`ap_python_starter_kit.acsys_client`](src/ap_python_starter_kit/acsys_client.py) contains shared ACSys helpers used by both CLI and GUI paths.
-
-Run the default CLI behavior:
-
-```bash
-uv run ap-python-starter-kit
-```
-
-Run the CLI with an explicit device/request string:
-
-```bash
-uv run ap-python-starter-kit --device "G:SCTIME@P,15H"
-```
-
-Run the GUI through the same launcher after installing the optional GUI extra:
-
-```bash
-uv sync --extra gui-pyqt
-uv run ap-python-starter-kit --gui --device "G:SCTIME@P,15H"
-```
-
-## Deployment Container
-
-Once your app is ready to deploy, the template provides a multi-stage Docker setup with:
-
-- a default CLI runtime image for launching [`ap_python_starter_kit.main`](src/ap_python_starter_kit/main.py)
-- an Xpra-based GUI runtime image for serving the integrated PyQt app in a browser
-
-Read more in [`docs/container.md`](docs/container.md).
-
-The Dockerfile also contains additional internal build stages used to assemble those runtime images.
-
-### Xpra Lifecycle Settings
-
-The Xpra GUI container's shutdown behavior is configured by the lifecycle variables near the top of [`docker/start.sh`](docker/start.sh):
-
-```bash
-XPRA_EXIT_WITH_CHILDREN="${XPRA_EXIT_WITH_CHILDREN:-yes}"
-XPRA_EXIT_WITH_WINDOWS="${XPRA_EXIT_WITH_WINDOWS:-yes}"
-XPRA_SERVER_IDLE_TIMEOUT="${XPRA_SERVER_IDLE_TIMEOUT:-300}"
-```
-
-- `XPRA_EXIT_WITH_CHILDREN` stops Xpra when the launched application process exits. Default: yes
-- `XPRA_EXIT_WITH_WINDOWS` stops Xpra when the application no longer has any windows open. Default: yes
-- `XPRA_SERVER_IDLE_TIMEOUT` controls how many seconds Xpra can remain idle before stopping. Default: 300
-
-Adjust these values in [`docker/start.sh`](docker/start.sh), or override the variables in the deployment environment, when an application needs different lifecycle behavior.
-
-## FNAL Kerberos Defaults
-
-This template assumes new applications will run in the `FNAL.GOV` Kerberos environment.
-
-- The repository includes [`.kerberos/krb5.conf`](.kerberos/krb5.conf)
-- The container copies that file into `/etc/krb5.conf` during build
-- Kerberos runtime packages are installed by default in the base image
-
-If a project needs a different Kerberos configuration, replace [`.kerberos/krb5.conf`](.kerberos/krb5.conf) or override `/etc/krb5.conf` in the deployment environment.
-
-## Optional GUI Support
-
-PyQt remains optional and is only installed when requested:
-
-```bash
-uv sync --extra gui-pyqt
-```
-
-The included GUI is intentionally minimal and demonstrative so downstream projects can replace it with their own application-specific interface while keeping the same package layout.
-
-## CI/CD
-
-This template comes preconfigured for Continuous Integration and Continuous Delivery. When opening a pull request, your code will automatically be checked for formatting errors and common coding pitfalls, verified to compile, and all tests will be run. A report of how much of the executable code is covered by the tests will be added to your pull request as well. The [`ci-cd.yaml`](.github/workflows/ci-cd.yaml) file contains values in the `env` section that you can configure to adjust the automated build slightly.
-
-Upon merging changes in to the `main` branch, your application will be built and packaged into a container. The default deployment behavior is controlled by [`IMAGE_VARIANT`](.github/workflows/ci-cd.yaml:20) in [`.github/workflows/ci-cd.yaml`](.github/workflows/ci-cd.yaml). It is currently set to `gui-xpra`, which builds the browser-served GUI variant by default. If your application is intended as a headless service, or works better from the command line, change [`IMAGE_VARIANT`](.github/workflows/ci-cd.yaml:20) to `cli`.
-
-Once the container is built, it will be pushed into Harbor at `adregistry.fnal.gov` so it can be deployed into the Kubernetes environment. Before images can be pushed to Harbor, **a GitHub fermi-ad admin must add the appropriate GitHub App containing the AP Python Harbor secrets to your repository**. Email or Slack this group of people before you attempt to deploy:
-  - Connor Howington (chowingt@fnal.gov)
-  - Jacob Curley (jcurley@fnal.gov)
-  - Beau Harrison (beau@fnal.gov)
-  - Mariana Gonzalez (mariana@fnal.gov)
-
-After successful deployment, navigate to the [AP Python Launcher](https://ad-apps-internal.fnal.gov/ap-python/) to launch your app!
-
-To reiterate: **deployment will happen on every commit to the `main` branch.** If you do not want a new container being generated every time you make a change (e.g., if you're in the middle of implementing a new feature and want to do it in stages), the recommended approach is to create a "feature" branch that tracks your pending updates. Starting on `main`, the process would look something like this:
-
-1. Run `git checkout -b <name of feature branch>` -> Creates a new branch based on `main` and checks out that branch
-2. Run `git checkout -b <name of stage>` -> Creates a new branch based on your feature branch and checks out that branch
-3. Make your series of edits
-4. Run `git commit` and `git push` -> pushes changes to your "stage" branch
-5. Open a pull request from your "stage" branch into your "feature" branch
-   - This will run the automated integration workflow, to check for problems in the code. It will _not_ build or deploy a container to Harbor.
-6. Merge into your feature branch
-7. Repeat steps 2-6 until your feature branch has all the changes you want to make and is ready to be deployed
-8. Open a pull request from your feature branch into `main` -> Runs the automated integration workflow one last time on all your changes together
-9. Merge into `main` -> Constructs the new container for your application and delivers it to Harbor
-   - Congrats! Your changes are now deployed to the [AP Python Launcher](https://ad-apps-internal.fnal.gov/ap-python/)!
+- [Quickstart](docs/quickstart.md) — create, rename, sync, and check your project.
+- [DevPod and dev containers](docs/devpod.md) — workspace setup and development desktop.
+- [Make the template your application](docs/application.md) — customize the starter CLI, tests, and optional GUI.
+- [Everyday development](docs/development.md) — [command quick reference](docs/development.md#command-quick-reference) for uv, the local desktop, and Git; plus dependencies, tests, and code quality.
+- [Container usage](docs/container.md) — optional local CLI and Xpra image checks and advanced settings.
+- [CI and deployment](docs/deployment.md) — maintained workflow path, image choice, and Harbor GitHub App contacts.
+- [Fermilab Kerberos defaults](docs/kerberos.md) — control-system authentication versus configuration and runtime tickets.
+- [Migrating an existing Python project](docs/migration.md) — adapt existing code and dependencies.

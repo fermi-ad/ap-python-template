@@ -1,88 +1,20 @@
-# Migrating an existing Python project
+# Bring an existing Python app into this template
 
-This guide will walk through the steps to take when pulling an existing Python project into the
-AP Python ecosystem.
+Already have an app? Create **your own repository from the template**, then adapt the included ACSys demo CLI and optional PyQt window to your code. Replace the example's device, arguments, and window as needed for your project. The migration notes for `pip` and PyQt5 below apply if your existing app uses them. Use [Quickstart](quickstart.md) to set up and rename the repository, [Make the template your application](application.md#replace-the-example-step-by-step) for the starter code, and [CI and deployment](deployment.md) when you are ready to deliver through the maintained workflows.
 
-### Assumptions
+## Bring in your application
 
-This guide assumes your project uses `pip` as a package manager and `PyQt 5` as a GUI framework.
-There will be sections dedicated to migrating from `pip` to `uv` and from `PyQt 5` to `PyQt 6`. 
-Feel free to skip these if you're already set up with `uv` and `PyQt 6`. 
+1. Create your repository and open the recommended workspace following [Quickstart](quickstart.md#1-create-a-repository-from-the-template). Commit or stash changes before renaming: the script edits files in place and may update a local shell configuration.
+2. From the repository root run `python3 scripts/rename_project.py` and supply your project name, Python package name, author, description, and installed command. See [the rename step](quickstart.md#3-rename-the-project) for options and how to check the result. The script renames the sample package under `src/` and updates selected files, not every app-specific reference. If you want a command name different from the project name, check `[project.scripts]` in [`pyproject.toml`](../pyproject.toml) and edit it manually if necessary.
+3. Put your existing modules and package data in the renamed package under `src/`. Adjust imports and file paths for an installed package, then adapt the sample [launcher, ACSys client wrapper, and GUI](application.md#replace-the-example-step-by-step) to what **your** app needs. Clean up unused demo code and revise the example tests to check your app. If your app uses additional packages or bundled data, review the [wheel package configuration](../pyproject.toml) and test the installed build.
+4. Update [`pyproject.toml`](../pyproject.toml): check the distribution name, Python requirement (the template uses `>=3.12`), wheel package path, dependencies, optional GUI extra if needed, and `[project.scripts]` command. The command's target must be an importable function in your installed package that works with a no-argument console-script call. The template includes `acsys` and `acsys[settings]` as dependencies; changing the demo CLI does not require changing them. See [Dependencies and environment](development.md#dependencies-and-environment) for lockfile and sync instructions.
+5. Make image startup launch your app: the CLI [Dockerfile](../Dockerfile) has a fixed module command, and the GUI [startup script](../docker/start.sh) has its own `APP_CMD` default. Update the relevant one if you change your launcher. You can normally release **without building images locally**; [Container usage](container.md) describes optional local tests. In [CI and deployment](deployment.md), select the `cli` workflow image for a headless app or `gui-xpra` for a browser-served desktop app, and follow the admin-managed Harbor access and delivery steps.
+6. Run `uv sync --dev` after changes, then `uv run <your-command> --help` if your app supports help (replace the placeholder with the command in your project), and `uv run pytest` on your revised tests. Verify that the installed command starts your code and commit your configuration, updated lockfile, and tests. See [Everyday development](development.md#tests-and-code-quality) for other checks.
 
-Included at the end of this guide are a few extra Quality-of-Life enhancements made to the original Auto Quad Centering application when testing out the migration process. They have to do with the application itself rather than the project configuration, so they may or may not have relevance in other applications.
+## Only if your existing app uses pip requirements
 
-## General migration steps
+The template records dependencies in [`pyproject.toml`](../pyproject.toml) and resolved versions in [`uv.lock`](../uv.lock). The recommended [DevPod workspace](devpod.md) supplies `uv`. If your old app has a requirements file, first choose the additional packages your app uses. From the repository root, `uv add -r path/to/requirements.txt` adds entries from that file (substitute its actual path). Check what it added and account for any private package sources, native libraries, or version constraints. Run `uv sync --dev` and `uv run <your-command>` to try the resulting installation; `uv run` handles the environment automatically. Commit both dependency files after checking them. Keep the old requirements file if other tooling still uses it; see [Dependencies and environment](development.md#dependencies-and-environment).
 
-1. Construct a new repository for your migrated application from this template, using the "**Create a new repository**" button.
-2. Ensure your AP Python development environment is set up. Follow [the guide](docs/devpod.md) for complete instructions.
-3. Use the rename script (run `python3 scripts/rename_project.py` in the DevPod for your migrated project repository) to change the project package name.
-Make it match the package name you use in your source project.
+## Only if you choose to move a PyQt5 app to PyQt6
 
-    For example, for Auto Quad Centering, the project name became `auto-quad-centering` and the package name was likewise `auto_quad_centering`.
-4. Replace the contents of `src/<your package name>` with your existing Python code to be migrated.
-5. If your source project used `pip`, follow the [`pip` to `uv` migration steps](#pip-to-uv-migration).
-6. If your source project used `PyQt 5`, follow the [`PyQt 5` to `PyQt 6` migration steps](#pyqt-5-to-pyqt-6).
-
-## `pip` to `uv` migration
-
-`uv` and its dependencies are already installed in your DevPod environment. To build with `uv`, you'll simply need to let it know what Python packages your project depends on and where the entrypoint for your code is. This is configured in the `pyproject.toml` file at the root of the repository. The exact version of the dependencies used by `uv` when building your code will be recorded in the `uv.lock` file. 
-
-Migration steps are as follows:
-
-1. In the command line, run `uv add -r src/<your_package_name>/requirements.txt`
-2. Rebuild the virtual environment by running `uv venv --clear` in the command line (this may take a minute to complete)
-    - Be sure to run `source .venv/bin/activate` once the virtual environment has been rebuilt
-    - Also run `uv run pre-commit install` to ensure the Git pre-commit hooks work correctly
-3. (optional) You can delete your `requirements.txt`. All dependencies should now be handled via the `pyproject.toml` file. Use `uv add` and `uv remove` to update your dependencies from the command line, or edit the `dependencies` section of `pyproject.toml` directly.
-    
-    `uv --help` has a complete list of the commands available with `uv`. 
-
-4. Update the project entrypoint in `pyproject.toml`
-
-    By now, your `pyproject.toml` should have a section that looks like 
-    ```toml
-    ...
-    [project.scripts]
-    <kebab-case-project-name> = "<snake_case_package_name>.main:main"
-    ...
-    ```
-
-    Update this section so the `.main:main` portion reflects the name and main function of the entry file for your project. For example, Auto Quad Centering has this section as 
-    ```toml
-    ...
-    [project.scripts]
-    auto-quad-centering = "auto_quad_centering.autocenter:main"
-    ...
-    ```
-    This reflects that the main file for the project is `auto_quad_centering/autocenter.py`, and the entrypoint for that file is a function called `main()`.
-
-## `PyQt 5` to `PyQt 6`
-
-While the bulk of upgrading from PyQt 5 to PyQt 6 is simply a matter of updating your import statements (i.e., `from PyQt5 import ...` becoming `from PyQt6 import ...`), there are a couple breaking changes to be aware of.
-
-- PyQt 6 demands fully-qualified enums, e.g. `Qt.AlignCenter` must now be `Qt.AlignmentFlag.AlignCenter`
-- Any uses of PyQt 5's `exec_()` function must now use the standard `exec()` function from Python 3
-- Various classes have moved to different modules (e.g. `QAction` and `QShortcut` are now in `QtGui` rather than `QtWidgets`)
-- Some methods/APIs have changed (e.g. `QMouseEvent` now uses `.position()` instead of `.x()` and `.y()`)
-
-For a deeper breakdown and migration guide, see [this article](https://www.pythonguis.com/faq/pyqt5-vs-pyqt6/).
-
-## Auto Quad Centering addons
-
-The following are some enhancements made to the original Auto Quad Centering application so it plays a little nicer with the Xpra runtime.
-
-1. Added scrolling behavior to all tabs
-
-    The Xpra runtime only exposes a certain amount of screen real estate. The original Auto Quad Centering app went off the screen by quite a bit, when first tested in the Xpra deployment. To resolve this, a `QScrollArea` was added to each of the tab widgets in the `ui` directory.
-
-2. Added a Kerberos login dialog
-
-    Auto Quad Centering requires the user to have an active Kerberos ticket to make settings to the accelerator. The original application assumed such a ticket would already be available in the host runtime. With the move to the remote Xpra environment, this is no longer a valid assumption. 
-
-    A small username/password dialog was added to `ui/dialogs.py` that would be activated when the user selects to generate a new ticket. This allows the migrated app to leverage the preexisting code to generate a ticket in Kerberos from `auth/kerberos_manager.py`. 
-
-3. Updated the file loading process to reflect the remote runtime
-
-    The original application expected to be able to load files from the user's system. With the deployment to a remote Xpra instance, this is no longer a straightforward process. Users must first upload files to the Xpra runtime, and only then can the application access those files. The same is true, but in reverse, for files generated by the app. It writes the file to the Xpra runtime, and users must initiate the process in Xpra to download a file from the remote filesystem. 
-
-    To help clarify this, some modifications were made to the file upload section in `ui/setup_tab.py`. There is now descriptive text to call out the new process.
+The template's [`gui-pyqt` extra](../pyproject.toml) contains PyQt6 and the [Xpra image builder](../Dockerfile) installs it. If your old GUI uses PyQt5 and you decide to upgrade, run `uv sync --dev --extra gui-pyqt` for local testing. Update imports to `PyQt6`, review enum names (for example `Qt.AlignmentFlag.AlignCenter`), `exec()` in place of `exec_()`, moved classes such as `QAction` in `QtGui`, and event-position changes. Test **your** window and workflows; see this [PyQt5-to-PyQt6 reference](https://www.pythonguis.com/faq/pyqt5-vs-pyqt6/) for examples. If you keep PyQt5 or use another toolkit, adapt your GUI dependency, code, and image build instead; the default extra is not a PyQt5 installation. If your app is headless, skip GUI migration entirely. For any GUI delivered through Xpra, test its layout, file access, and authentication in its actual runtime as appropriate to your app; see [Container usage](container.md#optional-run-the-browser-served-gui-image) and [Kerberos defaults](kerberos.md) if it uses the controls system.
