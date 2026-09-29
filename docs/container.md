@@ -39,7 +39,7 @@ After building the GUI image, [`make run-gui`](../Makefile) starts the Xpra desk
 
 The CLI target uses AlmaLinux and installs the package without the optional PyQt extra. The GUI target uses the external `adregistry.fnal.gov/dev-containers/ap-python-xpra-base` image, installs the `gui-pyqt` extra, and starts via [`docker/start.sh`](../docker/start.sh). Builds need access to the selected base image and dependencies, including the template's [ACSys Git dependency](../pyproject.toml). [`make build-no-cache`](../Makefile) rebuilds only the CLI image without cache. You can set `IMAGE_NAME` or `IMAGE_NAME_GUI` for local image tags; [`make clean`](../Makefile) removes images under the selected tags.
 
-**CLI override limitation:** Although make passes `APP_CMD` as an environment variable if supplied, the CLI [`runtime` entrypoint](../Dockerfile) does not read it. To run a different command in the built image, override the entrypoint explicitly:
+**CLI override limitation:** Although `make` passes `APP_CMD` as an environment variable if supplied, the CLI [`runtime` entrypoint](../Dockerfile) does not read it. To run a different command in the built image, override the entrypoint explicitly:
 
 ```bash
 docker run --rm --entrypoint python ap-python-starter-kit -m ap_python_starter_kit.main --help
@@ -75,9 +75,9 @@ The [startup script](../docker/start.sh) supports these environment overrides (s
 | `XPRA_EXIT_WITH_WINDOWS` | `yes` | Request shutdown when no application windows remain. |
 | `XPRA_SERVER_IDLE_TIMEOUT` | `300` | Idle-server timeout in seconds. |
 
-The startup script also accepts `APP_NAME` (session name), `XPRA_DISPLAY` (default `:100`), `XPRA_HTML` (default `on`), `XPRA_BIND_HOST` (default `0.0.0.0`), `XPRA_BIND_PORT` (default `14500`), and `XPRA_AUTH` (default `none`). It creates writable runtime directories under `/tmp` by default; see the [configuration block](../docker/start.sh) for log and directory path overrides. It waits for the HTML endpoint to become ready and stops Xpra on container shutdown. These settings are script/runtime options, not additional make arguments unless explicitly forwarded by the recipe.
+The startup script also accepts `APP_NAME` (session name), `XPRA_DISPLAY` (default `:100`), `XPRA_HTML` (default `on`), `XPRA_BIND_HOST` (default `0.0.0.0`), `XPRA_BIND_PORT` (default `14500`), and `XPRA_AUTH` (default `none`). It creates writable runtime directories under `/tmp` by default; see the [configuration block](../docker/start.sh) for log and directory path overrides. It waits for the HTML endpoint to become ready and stops Xpra on container shutdown. These settings are script/runtime options, not additional `make` arguments unless explicitly forwarded by the recipe.
 
-**Do not publish the default GUI port to an untrusted network.** Xpra defaults to `XPRA_AUTH=none` (no authentication), serves HTML, and listens on all container interfaces; the default [`make run-gui` port mapping](../Makefile) does not restrict the *host* interface. For local-only access, use an explicit loopback host-port binding instead of that make recipe, for example:
+**Do not publish the default GUI port to an untrusted network.** Xpra defaults to `XPRA_AUTH=none` (no authentication), serves HTML, and listens on all container interfaces; the default [`make run-gui` port mapping](../Makefile) does not restrict the *host* interface. For local-only access, use an explicit loopback host-port binding instead of that `make` recipe, for example:
 
 ```bash
 docker run --rm -p 127.0.0.1:14500:14500 ap-python-starter-kit-gui

@@ -6,7 +6,7 @@ This Python 3.12+ repository is a **template for your own application**. Create 
 
 ## Start here
 
-1. On the [template's GitHub page](https://github.com/fermi-ad/ap-python-template), select **Use this template → Create a new repository**. Develop in the repository you create.
+1. Select **Use this template → Create a new repository** above, then develop in the repository you create.
 2. Open your repository in DevPod using the [workspace setup guide](docs/devpod.md#start-a-workspace). Its development image is maintained externally and supplies the common tools used to check your app. Keep the project's uv configuration working so the maintainer-run integration workflow can install and check it; you do not maintain the image or the workflow.
 3. In the workspace terminal, check the example command without connecting to ACSys:
 
@@ -22,7 +22,7 @@ This Python 3.12+ repository is a **template for your own application**. Create 
 - [Quickstart](docs/quickstart.md) — create, rename, sync, and check your project.
 - [DevPod and dev containers](docs/devpod.md) — workspace setup and development desktop.
 - [Make the template your application](docs/application.md) — customize the starter CLI, tests, and optional GUI.
-- [Everyday development](docs/development.md) — dependencies, tests, code quality, and keeping the project compatible with integration.
+- [Everyday development](docs/development.md) — [command quick reference](docs/development.md#command-quick-reference) for uv, the local desktop, and Git; plus dependencies, tests, and code quality.
 - [Container usage](docs/container.md) — optional local CLI and Xpra image checks and advanced settings.
 - [CI and deployment](docs/deployment.md) — maintained workflow path, image choice, and Harbor GitHub App contacts.
 - [Fermilab Kerberos defaults](docs/kerberos.md) — control-system authentication versus configuration and runtime tickets.

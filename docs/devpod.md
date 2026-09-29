@@ -39,7 +39,7 @@ podman version
    uv run ap-python-starter-kit --help
    ```
 
-   If you already renamed the project, use the command under [`[project.scripts]`](../pyproject.toml) instead. If startup dependency installation failed, resolve the reported access/setup error before retrying `uv sync --dev --all-extras` and `uv run pre-commit install`.
+   The rename script updates this example command in your copied guide; check [`[project.scripts]`](../pyproject.toml) if you change the command later. If startup dependency installation failed, resolve the reported access/setup error before retrying `uv sync --dev --all-extras` and `uv run pre-commit install`.
 
 Next, follow the [Quickstart rename and example check](quickstart.md#3-rename-the-project). Your own code, tests, and normal work belong in your new repository; the [development guide](development.md) covers that routine.
 
@@ -53,7 +53,7 @@ To inspect the *template's optional PyQt example* in that desktop, run in the wo
 uv run ap-python-starter-kit --gui
 ```
 
-After renaming, use your actual command name. The workspace startup installs all extras, including PyQt; if you are working outside that setup, install the extra with `uv sync --extra gui-pyqt`. This demo also tries to read ACSys, so it needs appropriate access. Your application can use another toolkit or run without a desktop. This development desktop runs in DevPod; for the browser-served Xpra delivery image, see [Make the template your application](application.md#make-the-template-your-application) and [CI and deployment](deployment.md).
+The rename script updates the command above. The workspace startup installs all extras, including PyQt; if you are working outside that setup, install the extra with `uv sync --extra gui-pyqt`. This demo also tries to read ACSys, so it needs appropriate access. Your application can use another toolkit or run without a desktop. This development desktop runs in DevPod; for the browser-served Xpra delivery image, see [Make the template your application](application.md#make-the-template-your-application) and [CI and deployment](deployment.md).
 
 ## Windows troubleshooting
 

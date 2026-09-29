@@ -1,4 +1,4 @@
-# Quickstart: make this template your application
+# Quickstart
 
 Use this repository as a starting point for **your own application**. Create a repository from the template, open a prepared development workspace, rename the package, check the included example, and then customize it with your code. The example CLI queries ACSys and has an optional PyQt window; your app can use different libraries or run without a GUI. Use the provided [deployment guide](deployment.md) when you are ready to deliver your app through the maintained workflows.
 
@@ -22,7 +22,7 @@ python3 scripts/rename_project.py
 
 In a terminal, enter your project name (for example, `my-project`), Python module name (`my_project`), author, description, and command name (`my-project`) when prompted. The module is the folder under `src/` that holds your Python code; the command is what you type to start the app. To preview a rename, or see all available options, run `python3 scripts/rename_project.py --help` and use its `--check` option together with the required naming options.
 
-The script changes project configuration, the source package, tests, and some documentation. Review `git status` and the console command under [`[project.scripts]`](../pyproject.toml) before committing. **Current limitation:** the original project name and command name are the same text, so requesting a different `--cli-name` does not separately change the script entry. Edit that entry yourself if you need a different command. The renamer does not update every guide; examples and source links in the [application guide](application.md) and [development guide](development.md) still refer to the template names until you update them.
+The script changes project configuration, the source package, tests, and example names and source links in the [application guide](application.md) and [development guide](development.md). Review `git status`, the documentation links, and the console command under [`[project.scripts]`](../pyproject.toml) before committing. **Current limitation:** the original project name and command name are the same text, so requesting a different `--cli-name` does not separately change the script entry. Edit that entry yourself if you need a different command. Review app-specific examples as you replace the demo; the renamer does not rewrite their behavior.
 
 ## 4. Refresh the installation and check the example
 

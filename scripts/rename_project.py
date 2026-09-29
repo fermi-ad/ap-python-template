@@ -64,8 +64,11 @@ TARGET_FILES = [
     "docker/start.sh",
     "Makefile",
     "README.md",
+    "docs/application.md",
     "docs/container.md",
+    "docs/development.md",
     "docs/devpod.md",
+    "docs/kerberos.md",
     "docs/quickstart.md",
     "tests/test_main.py",
 ]
