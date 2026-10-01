@@ -5,7 +5,12 @@
 		"ghcr.io/devcontainers/features/desktop-lite:1": {
 			"password": "",
 			"webPort": 6080
-		}
+		},
+		"ghcr.io/devcontainers/features/docker-in-docker:4": {
+      		"version": "latest",
+      		"enableNonRootDocker": true,
+			"moby": false
+    	}
 	},
 	"containerEnv": {
 		"QT_AUTO_SCREEN_SCALE_FACTOR": "0",
