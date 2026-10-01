@@ -68,7 +68,7 @@ LABEL org.opencontainers.image.title="ap-python-template-cli"
 COPY --from=builder /usr/local /usr/local
 
 # Copy workspace script with execute permissions
-COPY --chmod=755 docker/create-workspace.sh /usr/local/bin/create-workspace.sh
+COPY docker/create-workspace.sh /usr/local/bin/create-workspace.sh
 
 # Copy CLI startup script with execute permissions
 COPY --chmod=755 docker/start-cli.sh /usr/local/bin/start-cli.sh
@@ -117,14 +117,10 @@ LABEL org.opencontainers.image.title="ap-python-template-xpra"
 COPY --from=xpra-builder /usr/local /usr/local
 
 # Copy workspace script with execute permissions
-COPY --chmod=755 docker/create-workspace.sh /usr/local/bin/create-workspace.sh
+COPY docker/create-workspace.sh /usr/local/bin/create-workspace.sh
 
 # Copy Xpra startup script with execute permissions
 COPY --chmod=755 docker/start-gui.sh /usr/local/bin/start-gui.sh
-
-# Run from user's home dir so Xpra's file upload/download dialog opens to the 
-# same dir as the app's generated files 
-WORKDIR /home/pyuser
 
 # Switch to non-root user for runtime security
 USER pyuser:pygroup

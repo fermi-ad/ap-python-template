@@ -1,4 +1,7 @@
-#!/bin/bash
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  echo "Storage startup error: source create-workspace.sh instead of executing it" >&2
+  exit 1
+fi
 
 STORAGE_ROOT=/mnt/storage
 
@@ -25,7 +28,14 @@ if ! probe=$(mktemp "$APP_STORAGE/.write-test.XXXXXX"); then
 fi
 rm -- "$probe"
 
-DATE=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
+DATE=$(date -u +"%Y%m%d_%H%M%S_${HOSTNAME}")
 JOB_DIR="$APP_STORAGE/$DATE"
-mkdir -p -- "$JOB_DIR"
-cd -- "$JOB_DIR"
+if ! mkdir -p -- "$JOB_DIR"; then
+  echo "Storage startup error: cannot create $JOB_DIR" >&2
+  exit 1
+fi
+
+if ! cd -- "$JOB_DIR"; then
+  echo "Storage startup error: cannot change directory to $JOB_DIR" >&2
+  exit 1
+fi
