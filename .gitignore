@@ -55,3 +55,6 @@ Thumbs.db
 
 # Project-specific
 .uv/
+
+# Mounted files from local runs
+mount/
