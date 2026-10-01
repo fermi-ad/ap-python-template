@@ -31,7 +31,7 @@ import re
 import shutil
 import sys
 import tempfile
-from collections.abc import Iterator
+from collections.abc import Generator
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -61,7 +61,9 @@ TARGET_FILES = [
     ".devfile.yaml",
     "pyproject.toml",
     "Dockerfile",
-    "docker/start.sh",
+    "docker/create-workspace.sh",
+    "docker/start-cli.sh",
+    "docker/start-gui.sh",
     "Makefile",
     "README.md",
     "docs/application.md",
@@ -150,7 +152,7 @@ def _write_file_atomic(path: Path, content: str) -> None:
 @contextlib.contextmanager
 def _atomic_rename_context(
     files: list[Path], old_pkg_dir: Path, new_pkg_dir: Path
-) -> Iterator[None]:
+) -> Generator[None]:
     """Context manager that makes all rename mutations atomic as a group.
 
     Before yielding, a full in-memory snapshot of every target file's bytes is
