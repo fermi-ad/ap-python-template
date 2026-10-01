@@ -58,7 +58,7 @@ jobs:
 
   integration:
     needs: setup
-    uses: fermi-ad/.github/.github/workflows/ap-python-integration.yaml@main
+    uses: fermi-ad/.github/.github/workflows/ap-python-integration.yaml@v1
     secrets: inherit
     permissions:
       contents: write # Allows coverage report to be attached to the commit status (push to main)
@@ -71,7 +71,7 @@ jobs:
     needs: [ setup, integration, check-renamed ]
     # Only deploys on pushes to main, not on pull request events. Also skips the first run of the workflow, which gets triggered when the new repository is created from the template.
     if: github.run_number != 1 && github.event_name == 'push'
-    uses: fermi-ad/.github/.github/workflows/ap-python-deployment.yaml@main
+    uses: fermi-ad/.github/.github/workflows/ap-python-deployment.yaml@v1
     secrets: inherit
     with:
       image-variant: ${{ needs.setup.outputs.image_variant }}

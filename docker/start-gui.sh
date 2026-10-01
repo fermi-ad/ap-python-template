@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash -l
 set -Eeuo pipefail
 
 ################################ Configuration ################################
@@ -20,14 +20,12 @@ XPRA_BIND_HOST="${XPRA_BIND_HOST:-0.0.0.0}"
 XPRA_BIND_PORT="${XPRA_BIND_PORT:-14500}"
 
 ### Application and logging settings.
-# Command launched by Xpra.
-APP_CMD="${APP_CMD:-python -m ap_python_starter_kit.main --gui}"
 # Paths for Xpra and application logs.
 XPRA_LOG_FILE="${XPRA_LOG_FILE:-/tmp/xpra.log}"
 APP_LOG_FILE="${APP_LOG_FILE:-/tmp/app.log}"
 
 ### Xpra lifecycle settings.
-# Stop Xpra when the launched application process (APP_CMD) exits.
+# Stop Xpra when the launched application process exits.
 XPRA_EXIT_WITH_CHILDREN="${XPRA_EXIT_WITH_CHILDREN:-yes}"
 # Stop Xpra when the application no longer has any windows open.
 XPRA_EXIT_WITH_WINDOWS="${XPRA_EXIT_WITH_WINDOWS:-yes}"
@@ -50,6 +48,10 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM EXIT
 
+############### Set runtime directory ######################
+source /usr/local/bin/create-workspace.sh
+############################################################
+
 mkdir -p "${USER_RUN_DIR_DEFAULT}" "${XDG_RUNTIME_DIR_DEFAULT}" "${XPRA_RUN_DIR_DEFAULT}" /tmp/.X11-unix
 chmod 700 "${USER_RUN_DIR_DEFAULT}" "${XDG_RUNTIME_DIR_DEFAULT}" "${XPRA_RUN_DIR_DEFAULT}" || true
 if ! chmod 1777 /tmp/.X11-unix 2>/dev/null; then
@@ -62,7 +64,7 @@ export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR_DEFAULT}"
 
 echo "[start.sh] starting Xpra HTML on ${XPRA_BIND_HOST}:${XPRA_BIND_PORT} display ${XPRA_DISPLAY} (auth=${XPRA_AUTH})"
 
-echo "[start.sh] app cmd: ${APP_CMD}" >"${APP_LOG_FILE}"
+echo "[start.sh] app cmd: python -m ap_python_starter_kit.main --gui" >"${APP_LOG_FILE}"
 
 xpra start "${XPRA_DISPLAY}" \
   --bind-tcp="${XPRA_BIND_HOST}:${XPRA_BIND_PORT}" \
@@ -73,7 +75,7 @@ xpra start "${XPRA_DISPLAY}" \
   --exit-with-windows="${XPRA_EXIT_WITH_WINDOWS}" \
   --server-idle-timeout="${XPRA_SERVER_IDLE_TIMEOUT}" \
   --start-child="openbox" \
-  --start-child="/bin/bash -lc '${APP_CMD} >>\"${APP_LOG_FILE}\" 2>&1'" \
+  --start-child="/bin/bash -lc 'python -m ap_python_starter_kit.main --gui >>\"${APP_LOG_FILE}\" 2>&1'" \
   --pulseaudio=no \
   --notifications=no \
   --bell=no \

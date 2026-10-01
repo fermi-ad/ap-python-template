@@ -17,9 +17,9 @@ help:
 	@echo "  make format                                  Format code using ruff"
 	@echo "  make lint                                    Lint code using ruff"
 	@echo "  make rename-project                          Rename project (update template names in files and src/ package, and rename Docker images in Makefile)"
-	@echo "  make run [APP_CMD=...]                       Run CLI container (defaults to template CLI launcher)"
-	@echo "  make run-gui [XPRA_PORT=14500] [APP_CMD=...] Run GUI + Xpra HTML container (integrated PyQt app)"
-	@echo "  make run-uv [APP_CMD=...]                    Run project locally using uv (defaults to template CLI launcher)"
+	@echo "  make run                                   Run CLI container (template CLI launcher)"
+	@echo "  make run-gui [XPRA_PORT=14500]             Run GUI + Xpra HTML container (integrated PyQt app)"
+	@echo "  make run-uv                                Run project locally using uv (template CLI launcher)"
 	@echo "  make shell                                   Open an interactive shell in CLI container"
 	@echo "  make shell-gui                               Open an interactive shell in GUI + Xpra container"
 	@echo "  make test                                    Run tests using pytest"
@@ -48,20 +48,24 @@ rename-project:
 	python3 scripts/rename_project.py
 
 run:
+    mkdir -p ./mount
+	chmod -R 777 ./mount
 	@docker run --rm --name $(CONTAINER_NAME) \
-		$(if $(APP_CMD),-e APP_CMD="$(APP_CMD)") \
+	    --mount type=bind,source=mount,target=/mnt/storage \
 		$(IMAGE_NAME)
 
 run-gui:
+    mkdir -p ./mount
+	chmod -R 777 ./mount
 	@docker run --rm --name $(CONTAINER_NAME)-xpra \
 		-p $(XPRA_PORT):14500 \
 		-e XPRA_BIND_HOST="$(XPRA_BIND_HOST)" \
-		$(if $(APP_CMD),-e APP_CMD="$(APP_CMD)") \
+	    --mount type=bind,source=mount,target=/mnt/storage \
 		$(IMAGE_NAME_GUI)
 	@echo "Xpra HTML is served at: http://localhost:$(XPRA_PORT)/"
 
 run-uv:
-	uv run $(APP_CMD)
+	uv run ap-python-starter-kit
 
 shell:
 	docker run --rm -it --entrypoint /bin/bash $(IMAGE_NAME)

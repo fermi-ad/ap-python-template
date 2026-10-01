@@ -67,15 +67,20 @@ LABEL org.opencontainers.image.title="ap-python-template-cli"
 
 COPY --from=builder /usr/local /usr/local
 
+# Copy workspace script with execute permissions
+COPY --chmod=755 docker/create-workspace.sh /usr/local/bin/create-workspace.sh
+
+# Copy CLI startup script with execute permissions
+COPY --chmod=755 docker/start-cli.sh /usr/local/bin/start-cli.sh
+
 WORKDIR /app
 
 USER pyuser:pygroup
 
 ENV PATH="/usr/local/.venv/bin:${PATH}"
-ENV APP_CMD="python -m ap_python_starter_kit.main"
 
 # Default (CLI) container just runs the app command.
-ENTRYPOINT ["/bin/bash", "-lc", "python -m ap_python_starter_kit.main"]
+ENTRYPOINT ["/usr/local/bin/start-cli.sh"]
 
 # ============================================================================
 # Xpra-builder stage: Build Python venv with PyQt for Xpra deployment
@@ -111,8 +116,11 @@ LABEL org.opencontainers.image.title="ap-python-template-xpra"
 # Copy built venv from xpra-builder stage
 COPY --from=xpra-builder /usr/local /usr/local
 
+# Copy workspace script with execute permissions
+COPY --chmod=755 docker/create-workspace.sh /usr/local/bin/create-workspace.sh
+
 # Copy Xpra startup script with execute permissions
-COPY --chmod=755 docker/start.sh /usr/local/bin/start.sh
+COPY --chmod=755 docker/start-gui.sh /usr/local/bin/start-gui.sh
 
 # Run from user's home dir so Xpra's file upload/download dialog opens to the 
 # same dir as the app's generated files 
@@ -134,4 +142,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:14500/ || exit 1
 
 # Start Xpra server with configured application
-ENTRYPOINT ["/usr/local/bin/start.sh"]
+ENTRYPOINT ["/usr/local/bin/start-gui.sh"]
