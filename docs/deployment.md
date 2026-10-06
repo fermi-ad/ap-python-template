@@ -24,7 +24,7 @@ This template comes with a [CI/CD workflow](../.github/workflows/ci-cd.yaml). Cu
 The [AP Python Launcher](https://ad-apps-internal.fnal.gov/ap-python/) applies these Kubernetes container resource limits to launched apps:
 
 | Resource | Limit |
-| --- | --- | --- |
+| --- | --- |
 | CPU | `1000m` |
 | Memory | `1Gi` |
 
