@@ -19,6 +19,17 @@ This template comes with a [CI/CD workflow](../.github/workflows/ci-cd.yaml). Cu
 6. **Merge to `main` when ready.** A merge or direct push to `main` runs integration and the rename check. When the checks succeed and the push is eligible for delivery, the maintained deployment workflow builds and delivers the chosen image to Harbor (`adregistry.fnal.gov`). Later qualifying pushes to `main` can repeat delivery, so keep unfinished work on branches. See [workflow guards](#advanced-workflow-settings-and-behavior) if delivery is skipped.
 7. **Check the outcome.** In your new repository on GitHub, open **Actions → Continuous Integration & Continuous Delivery** and inspect the run for the `main` push, especially the `delivery` job. After successful delivery, check the [AP Python Launcher](https://ad-apps-internal.fnal.gov/ap-python/) for your application. If the job fails or the app is missing from the launcher, share the run link with one of the admins above rather than adding secrets to your code.
 
+## Per-app container resource limits
+
+The [AP Python Launcher](https://ad-apps-internal.fnal.gov/ap-python/) applies these Kubernetes container resource limits to launched apps:
+
+| Resource | Limit |
+| --- | --- | --- |
+| CPU | `1000m` |
+| Memory | `1Gi` |
+
+Individual applications can be given higher resource limits on request. If a particular app needs higher limits, send the AP Python team a request with supporting documentation showing that app's specific needs, including data from tests of the app's resource usage during runtime.
+
 ## Advanced: workflow settings and behavior
 
 The steps above cover normal delivery. The settings and guards below are for changing integration options or troubleshooting an Actions run; the reusable workflows and base images are maintained outside your repository.
