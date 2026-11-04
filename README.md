@@ -24,6 +24,6 @@ This Python 3.12+ repository is a **template for your own application**. Create 
 - [Make the template your application](docs/application.md) — customize the starter CLI, tests, and optional GUI.
 - [Everyday development](docs/development.md) — [command quick reference](docs/development.md#command-quick-reference) for uv, the local desktop, and Git; plus dependencies, tests, and code quality.
 - [Container usage](docs/container.md) — optional local CLI and Xpra image checks and advanced settings.
-- [CI and deployment](docs/deployment.md) — maintained workflow path, image choice, and Harbor GitHub App contacts.
+- [CI and deployment](docs/deployment.md) — maintained workflow path, image choice, Harbor GitHub App contacts, launcher resource limits, and persistent storage.
 - [Fermilab Kerberos defaults](docs/kerberos.md) — control-system authentication versus configuration and runtime tickets.
 - [Migrating an existing Python project](docs/migration.md) — adapt existing code and dependencies.
