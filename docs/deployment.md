@@ -30,6 +30,38 @@ The [AP Python Launcher](https://ad-apps-internal.fnal.gov/ap-python/) applies t
 
 Individual applications can be given higher resource limits on request. If a particular app needs higher limits, send the AP Python team a request with supporting documentation showing that app's specific needs, including data from tests of the app's resource usage during runtime.
 
+## Persistent storage
+
+The [AP Python Launcher](https://ad-apps-internal.fnal.gov/ap-python/) gives every launched app persistent storage from a shared Kubernetes persistent volume (PVC). Your app can find it through two environment variables set by the launcher:
+
+| Environment variable | Default value | Points to | Access | Location within the PVC |
+| --- | --- | --- | --- | --- |
+| `AP_WRITABLE_STORAGE_DIR` | `/mnt/storage/ap-python-writable` | This launch's own directory, where your app should store its persistent data | Writable | `/ap-python/<repo>/<UTC-timestamp>` |
+| `AP_READ_ONLY_STORAGE_DIR` | `/mnt/storage/ap-python-read-only` | A view of all data in the shared storage | Read-only | `/ap-python/` |
+
+The last column shows where each mounted directory lives in the PVC, which is useful when locating your app's data from outside the container. `<repo>` is your repository name and `<UTC-timestamp>` is the microsecond launch time.
+
+Example:
+
+```python
+import os
+from pathlib import Path
+
+output_dir = Path(os.environ["AP_WRITABLE_STORAGE_DIR"])
+if not output_dir.is_dir():
+    raise RuntimeError(f"Writable storage is not available at {output_dir}")
+
+(output_dir / "result.csv").write_text("value\n42\n")
+```
+
+When running outside the launcher (for example, in your DevPod workspace), you can set `AP_WRITABLE_STORAGE_DIR` to a local directory for the code above to work.
+
+Keep these points in mind when using it:
+
+- **Write persistent data to the writable directory only.** Anything written elsewhere in the container is lost when the launch ends.
+- **Outputs outlive the launch.** Data stays available in the shared read-only view after the Job is deleted or expires. There is no automatic cleanup of old data.
+- **Storage setup failures are reported by the launcher.** If the launcher cannot initialize your launch's directory, the launch fails and the failure is reported in its status instead of starting your app.
+
 ## Advanced: workflow settings and behavior
 
 The steps above cover normal delivery. The settings and guards below are for changing integration options or troubleshooting an Actions run; the reusable workflows and base images are maintained outside your repository.
