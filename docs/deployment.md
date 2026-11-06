@@ -41,6 +41,8 @@ The [AP Python Launcher](https://ad-apps-internal.fnal.gov/ap-python/) gives eve
 
 The last column shows where each mounted directory lives in the PVC, which is useful when locating your app's data from outside the container. `<repo>` is your repository name and `<UTC-timestamp>` is the microsecond launch time.
 
+Both [container images](container.md) start with `/mnt/storage/ap-python-writable` as their working directory, so relative paths resolve inside the writable storage. The GUI (`gui-xpra`) image also writes its `app.log` and `xpra.log` files there. The mounted volume must be writable by the container user (`pyuser`, UID/GID 1000).
+
 Example:
 
 ```python
@@ -54,12 +56,12 @@ if not output_dir.is_dir():
 (output_dir / "result.csv").write_text("value\n42\n")
 ```
 
-When running outside the launcher (for example, in your DevPod workspace), you can set `AP_WRITABLE_STORAGE_DIR` to a local directory for the code above to work.
+When running outside the launcher (for example, in your DevPod workspace), you can set `AP_WRITABLE_STORAGE_DIR` to a local directory for the code above to work. The `make run` and `make run-gui` targets do this for you by mounting a local directory; see [local storage mount](container.md#optional-local-storage-mount).
 
 Keep these points in mind when using it:
 
-- **Write persistent data to the writable directory only.** Anything written elsewhere in the container is lost when the launch ends.
-- **Outputs outlive the launch.** Data stays available in the shared read-only view after the Job is deleted or expires. There is no automatic cleanup of old data.
+- **Write persistent data to the writable directory only.** Anything written elsewhere in the container is lost when the launch ends. The working directory is the writable directory, but prefer `AP_WRITABLE_STORAGE_DIR` over relying on it, so your code does not depend on where it was started.
+- **Outputs outlive the launch.** Data stays available in the shared read-only view after the Job is deleted or expires. There is no automatic cleanup of old data, including the GUI image's log files.
 - **Storage setup failures are reported by the launcher.** If the launcher cannot initialize your launch's directory, the launch fails and the failure is reported in its status instead of starting your app.
 
 ## Advanced: workflow settings and behavior

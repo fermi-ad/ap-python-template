@@ -6,7 +6,13 @@ CONTAINER_NAME ?= ap-python-starter-kit
 XPRA_PORT ?= 14500
 XPRA_BIND_HOST ?= 0.0.0.0
 
-.PHONY: help build build-gui build-no-cache docs-serve format lint rename-project run run-gui run-uv shell shell-gui test uv-sync clean
+# Local stand-in for the launcher's persistent volume. This host directory is
+# mounted at the same path the launcher uses; override STORAGE_HOST_DIR to change it.
+STORAGE_HOST_DIR ?= $(CURDIR)/mount/$(CONTAINER_NAME)/local
+STORAGE_CONTAINER_DIR := /mnt/storage/ap-python-writable
+DOCKER_STORAGE_ARGS = -v "$(STORAGE_HOST_DIR):$(STORAGE_CONTAINER_DIR)" -e AP_WRITABLE_STORAGE_DIR="$(STORAGE_CONTAINER_DIR)"
+
+.PHONY: help build build-gui build-no-cache docs-serve format lint rename-project run run-gui run-uv shell shell-gui storage-dir test uv-sync clean
 
 help:
 	@echo "Available targets:"
@@ -19,6 +25,8 @@ help:
 	@echo "  make rename-project                          Rename project (update template names in files and src/ package, and rename Docker images in Makefile)"
 	@echo "  make run [APP_CMD=...]                       Run CLI container (defaults to template CLI launcher)"
 	@echo "  make run-gui [XPRA_PORT=14500] [APP_CMD=...] Run GUI + Xpra HTML container (integrated PyQt app)"
+	@echo "                                               (run, run-gui, shell, shell-gui mount $(STORAGE_HOST_DIR)"
+	@echo "                                                at $(STORAGE_CONTAINER_DIR); override with STORAGE_HOST_DIR=...)"
 	@echo "  make run-uv [APP_CMD=...]                    Run project locally using uv (defaults to template CLI launcher)"
 	@echo "  make shell                                   Open an interactive shell in CLI container"
 	@echo "  make shell-gui                               Open an interactive shell in GUI + Xpra container"
@@ -47,14 +55,22 @@ lint:
 rename-project:
 	python3 scripts/rename_project.py
 
-run:
+# Create the local storage directory. The container user (uid 1000) must be able
+# to write to it regardless of the host user's uid, so it is made world-writable.
+storage-dir:
+	@mkdir -p "$(STORAGE_HOST_DIR)"
+	@chmod a+rwx "$(STORAGE_HOST_DIR)" || echo "warning: could not chmod $(STORAGE_HOST_DIR); the container user (uid 1000) may be unable to write to it" >&2
+
+run: storage-dir
 	@docker run --rm --name $(CONTAINER_NAME) \
+		$(DOCKER_STORAGE_ARGS) \
 		$(if $(APP_CMD),-e APP_CMD="$(APP_CMD)") \
 		$(IMAGE_NAME)
 
-run-gui:
+run-gui: storage-dir
 	@docker run --rm --name $(CONTAINER_NAME)-xpra \
 		-p $(XPRA_PORT):14500 \
+		$(DOCKER_STORAGE_ARGS) \
 		-e XPRA_BIND_HOST="$(XPRA_BIND_HOST)" \
 		$(if $(APP_CMD),-e APP_CMD="$(APP_CMD)") \
 		$(IMAGE_NAME_GUI)
@@ -63,11 +79,11 @@ run-gui:
 run-uv:
 	uv run $(APP_CMD)
 
-shell:
-	docker run --rm -it --entrypoint /bin/bash $(IMAGE_NAME)
+shell: storage-dir
+	docker run --rm -it $(DOCKER_STORAGE_ARGS) --entrypoint /bin/bash $(IMAGE_NAME)
 
-shell-gui:
-	docker run --rm -it --entrypoint /bin/bash $(IMAGE_NAME_GUI)
+shell-gui: storage-dir
+	docker run --rm -it $(DOCKER_STORAGE_ARGS) --entrypoint /bin/bash $(IMAGE_NAME_GUI)
 
 test:
 	uv run pytest

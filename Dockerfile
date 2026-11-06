@@ -67,7 +67,10 @@ LABEL org.opencontainers.image.title="ap-python-template-cli"
 
 COPY --from=builder /usr/local /usr/local
 
-WORKDIR /app
+RUN mkdir -p /mnt/storage/ap-python-writable \
+ && chown pyuser:pygroup /mnt/storage/ap-python-writable
+
+WORKDIR /mnt/storage/ap-python-writable
 
 USER pyuser:pygroup
 
@@ -114,9 +117,11 @@ COPY --from=xpra-builder /usr/local /usr/local
 # Copy Xpra startup script with execute permissions
 COPY --chmod=755 docker/start.sh /usr/local/bin/start.sh
 
-# Run from user's home dir so Xpra's file upload/download dialog opens to the 
-# same dir as the app's generated files 
-WORKDIR /home/pyuser
+RUN mkdir -p /mnt/storage/ap-python-writable \
+ && chown pyuser:pygroup /mnt/storage/ap-python-writable
+
+# Run from the mounted shared directory
+WORKDIR /mnt/storage/ap-python-writable
 
 # Switch to non-root user for runtime security
 USER pyuser:pygroup
