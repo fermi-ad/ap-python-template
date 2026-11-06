@@ -17,6 +17,16 @@ A **CLI image** runs a command-line/headless program and prints output to its co
 
 Choose **one** image for your app: run `make build` for the CLI target or `make build-gui` for the Xpra GUI target. The template's startup commands point to its example app; the rename script updates the original module names, but if you change the entry point, [update startup](application.md#replace-the-example-step-by-step) before building. The Xpra target uses an externally maintained base image. Local Make commands do **not** publish or deploy images; use [CI and deployment](deployment.md) for that.
 
+## Optional: local storage mount
+
+Both images run as `pyuser` (UID 1000) with `/mnt/storage/ap-python-writable` as their working directory. In the [AP Python Launcher](https://ad-apps-internal.fnal.gov/ap-python/), a persistent volume is mounted there; see [Persistent storage](deployment.md#persistent-storage). The `make run`, `make run-gui`, `make shell`, and `make shell-gui` targets imitate this by bind-mounting a host directory at the same path and setting `AP_WRITABLE_STORAGE_DIR` to it. By default the host directory is `mount/<container-name>/local` in your repository (the `mount/` directory is ignored by Git). Override it with `STORAGE_HOST_DIR`:
+
+```bash
+make run STORAGE_HOST_DIR=/tmp/my-app-storage
+```
+
+The Make targets create the host directory and make it world-writable, because the container's UID 1000 may not match your host user. If you run `docker run` yourself, mount a directory that UID 1000 can write to, or the GUI image will exit at startup with a "not writable" error.
+
 ## Optional: run the CLI image
 
 ```bash
@@ -47,7 +57,7 @@ docker run --rm --entrypoint python ap-python-starter-kit -m ap_python_starter_k
 
 To make `APP_CMD` control the CLI image, change the entrypoint in your project; setting the environment variable alone is insufficient.
 
-The [`xpra-runtime` image](../Dockerfile) exposes port `14500`, has a health check against `http://localhost:14500/`, and runs as `pyuser` in `/home/pyuser`. Its [startup script](../docker/start.sh) defaults to `python -m ap_python_starter_kit.main --gui`. Xpra starts `openbox` and the configured application, writes the app and Xpra logs to `/tmp/app.log` and `/tmp/xpra.log` by default, and streams both logs to container stdout.
+The [`xpra-runtime` image](../Dockerfile) exposes port `14500`, has a health check against `http://localhost:14500/`, and runs as `pyuser` in `/mnt/storage/ap-python-writable`. Its [startup script](../docker/start.sh) defaults to `python -m ap_python_starter_kit.main --gui`. The script exits with an error if the writable directory (`AP_WRITABLE_STORAGE_DIR`, default `/mnt/storage/ap-python-writable`) is missing or not writable. It changes into that directory, so the application starts there. Xpra starts `openbox` and the configured application, writes the app and Xpra logs to `app.log` and `xpra.log` in that directory by default (override with `APP_LOG_FILE` and `XPRA_LOG_FILE`), and streams both logs to container stdout. Because the directory is persistent storage in the launcher, these logs are kept after the launch ends and are not cleaned up automatically.
 
 To select a different **host** port without changing the container's listening port:
 
@@ -75,7 +85,7 @@ The [startup script](../docker/start.sh) supports these environment overrides (s
 | `XPRA_EXIT_WITH_WINDOWS` | `yes` | Request shutdown when no application windows remain. |
 | `XPRA_SERVER_IDLE_TIMEOUT` | `300` | Idle-server timeout in seconds. |
 
-The startup script also accepts `APP_NAME` (session name), `XPRA_DISPLAY` (default `:100`), `XPRA_HTML` (default `on`), `XPRA_BIND_HOST` (default `0.0.0.0`), `XPRA_BIND_PORT` (default `14500`), and `XPRA_AUTH` (default `none`). It creates writable runtime directories under `/tmp` by default; see the [configuration block](../docker/start.sh) for log and directory path overrides. It waits for the HTML endpoint to become ready and stops Xpra on container shutdown. These settings are script/runtime options, not additional `make` arguments unless explicitly forwarded by the recipe.
+The startup script also accepts `APP_NAME` (session name), `XPRA_DISPLAY` (default `:100`), `XPRA_HTML` (default `on`), `XPRA_BIND_HOST` (default `0.0.0.0`), `XPRA_BIND_PORT` (default `14500`), and `XPRA_AUTH` (default `none`). It creates Xpra's runtime directories under `/tmp` by default (sockets and `chmod 700` directories do not belong on the shared volume); see the [configuration block](../docker/start.sh) for log and directory path overrides. It waits for the HTML endpoint to become ready and stops Xpra on container shutdown. These settings are script/runtime options, not additional `make` arguments unless explicitly forwarded by the recipe.
 
 **Do not publish the default GUI port to an untrusted network.** Xpra defaults to `XPRA_AUTH=none` (no authentication), serves HTML, and listens on all container interfaces; the default [`make run-gui` port mapping](../Makefile) does not restrict the *host* interface. For local-only access, use an explicit loopback host-port binding instead of that `make` recipe, for example:
 
