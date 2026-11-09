@@ -27,3 +27,4 @@ This Python 3.12+ repository is a **template for your own application**. Create 
 - [CI and deployment](docs/deployment.md) — maintained workflow path, image choice, Harbor GitHub App contacts, launcher resource limits, and persistent storage.
 - [Fermilab Kerberos defaults](docs/kerberos.md) — control-system authentication versus configuration and runtime tickets.
 - [Migrating an existing Python project](docs/migration.md) — adapt existing code and dependencies.
+- [Changelog](CHANGELOG.md) — template versions and migration guides for projects created from earlier versions.

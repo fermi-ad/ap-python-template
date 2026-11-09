@@ -7,7 +7,7 @@ packages = ["src/ap_python_starter_kit"]
 
 [project]
 name = "ap-python-starter-kit"
-version = "0.1.0"
+version = "0.2.0"
 description = "Python starter kit"
 readme = "README.md"
 requires-python = ">=3.12"
