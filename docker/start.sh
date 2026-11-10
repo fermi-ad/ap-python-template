@@ -22,9 +22,12 @@ XPRA_BIND_PORT="${XPRA_BIND_PORT:-14500}"
 ### Application and logging settings.
 # Command launched by Xpra.
 APP_CMD="${APP_CMD:-python -m ap_python_starter_kit.main --gui}"
+# Persistent writable directory (mounted by the launcher). The application runs
+# from here, and the logs below are written here by default.
+WRITABLE_DIR="${AP_WRITABLE_STORAGE_DIR:-/mnt/storage/ap-python-writable}"
 # Paths for Xpra and application logs.
-XPRA_LOG_FILE="${XPRA_LOG_FILE:-/tmp/xpra.log}"
-APP_LOG_FILE="${APP_LOG_FILE:-/tmp/app.log}"
+XPRA_LOG_FILE="${XPRA_LOG_FILE:-${WRITABLE_DIR}/xpra.log}"
+APP_LOG_FILE="${APP_LOG_FILE:-${WRITABLE_DIR}/app.log}"
 
 ### Xpra lifecycle settings.
 # Stop Xpra when the launched application process (APP_CMD) exits.
@@ -42,6 +45,16 @@ XDG_RUNTIME_DIR_DEFAULT="${XDG_RUNTIME_DIR:-${RUNTIME_BASE}/runtime-pyuser}"
 XPRA_RUN_DIR_DEFAULT="${XPRA_RUN_DIR:-${RUNTIME_BASE}/xpra}"
 USER_RUN_DIR_DEFAULT="${USER_RUN_DIR:-${RUNTIME_BASE}/user-1000}"
 ###############################################################################
+
+if [ ! -d "${WRITABLE_DIR}" ] || [ ! -w "${WRITABLE_DIR}" ]; then
+  echo "[start.sh] error: writable storage directory ${WRITABLE_DIR} is missing or not writable by $(id -un) (uid $(id -u))" >&2
+  exit 1
+fi
+
+# Run the application (launched by Xpra) from the writable directory and let it
+# discover the location through the same variable the launcher provides.
+cd "${WRITABLE_DIR}"
+export AP_WRITABLE_STORAGE_DIR="${WRITABLE_DIR}"
 
 cleanup() {
   echo "[start.sh] shutting down"

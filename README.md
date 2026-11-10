@@ -6,7 +6,7 @@ This Python 3.12+ repository is a **template for your own application**. Create 
 
 ## Start here
 
-1. Select **Use this template → Create a new repository** above, then develop in the repository you create.
+1. Select **Use this template → Create a new repository** above, then develop in the repository you create. The **Use this template** button only appears if you are signed in to GitHub as a member of the [Fermi-AD organization](https://github.com/fermi-ad). If you do not see it, check that you are signed in with the correct account and are a member of the organization.
 2. Open your repository in DevPod using the [workspace setup guide](docs/devpod.md#start-a-workspace). Its development image is maintained externally and supplies the common tools used to check your app. Keep the project's uv configuration working so the maintainer-run integration workflow can install and check it; you do not maintain the image or the workflow.
 3. In the workspace terminal, check the example command without connecting to ACSys:
 
@@ -27,3 +27,4 @@ This Python 3.12+ repository is a **template for your own application**. Create 
 - [CI and deployment](docs/deployment.md) — maintained workflow path, image choice, Harbor GitHub App contacts, launcher resource limits, and persistent storage.
 - [Fermilab Kerberos defaults](docs/kerberos.md) — control-system authentication versus configuration and runtime tickets.
 - [Migrating an existing Python project](docs/migration.md) — adapt existing code and dependencies.
+- [Changelog](CHANGELOG.md) — template versions and migration guides for projects created from earlier versions.
